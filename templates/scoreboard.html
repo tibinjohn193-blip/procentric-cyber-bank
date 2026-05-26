@@ -2,104 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Procentric Cyber Bank - Terminal</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Dashboard | Procentric Cyber Range</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; }
-        .navbar { background: #0a192f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #00c853; }
-        .main-container { display: flex; padding: 30px; gap: 30px; flex-wrap: wrap; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 320px; }
-        .balance-box { background: linear-gradient(135deg, #0a192f, #172a45); color: #00c853; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .challenge-block { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 5px solid #0a192f; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
-        th { background: #f5f5f5; }
-        .btn { background: #0a192f; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        body { background-color: #0b0f19; color: #e2e8f0; }
+        .navbar-custom { background-color: #111827; border-bottom: 1px solid #1f2937; }
+        .card-custom { background-color: #1f2937; border: 1px solid #374151; border-radius: 12px; margin-bottom: 20px; }
+        .challenge-title { font-weight: 600; color: #38bdf8; }
+        .badge-owasp { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <h2><i class="fa-solid fa-server"></i> Procentric Bank Lab Engine</h2>
-        <div>
-            <span>Operator: <strong>{{ current_user.username }}</strong> 🌐 | </span>
-            <a href="/logout" style="color: #ffc107; text-decoration: none; font-weight: bold;">Terminate Session</a>
+<nav class="navbar navbar-custom py-3 mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1 text-info fw-bold">🏦 Procentric Cyber Range</span>
+        <div class="d-flex align-items-center">
+            <span class="me-3">Operator: <strong class="text-warning">{{ current_user.username }}</strong></span>
+            {% if is_admin %}
+                <span class="badge bg-danger me-2 animation-pulse">[ADMIN ACTIVATED: FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}]</span>
+            {% endif %}
+            <a href="/logout" class="btn btn-sm btn-outline-danger">Disconnect</a>
         </div>
     </div>
+</nav>
 
+<div class="container">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div style="background: #e8f5e9; color: #2e7d32; padding: 15px; margin: 20px 30px 0 30px; border-radius: 6px; border-left: 5px solid #2e7d32; font-weight: bold;">{{ messages[0] }}</div>
+        {% for message in messages %}
+          <div class="alert alert-success bg-dark text-success border-success py-2">{{ message }}</div>
+        {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <div class="main-container">
-        <div class="card">
-            <div class="balance-box">
-                <h4 style="margin:0; color:#fff; opacity:0.7;">Liquid Core Balance</h4>
-                <h1 style="margin:5px 0 0 0;">INR {{ current_user.balance }}.00</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card p-4 card-custom text-center text-md-start mb-4" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                <span class="text-muted small text-uppercase fw-bold">Available Liquidity Vault</span>
+                <h1 class="text-success fw-black mt-1">INR {{ current_user.balance }}.00</h1>
             </div>
 
-            <h3>Auditable Target Vulnerabilities (OWASP Top 10 Contexts)</h3>
+            <h4 class="mb-4 fw-bold text-white">Target Missions Matrix</h4>
 
-            <div class="challenge-block">
-                <h4><i class="fa-solid fa-gauge-high"></i> Race Condition (High-Frequency Withdrawal)</h4>
-                <p>Abuse structural context-switching delays by multithreading concurrent requests to empty account balances past zero.</p>
-                <form action="/instant-withdraw" method="POST">
-                    <input type="number" name="amount" value="3000" style="width: 80px; padding:6px;">
-                    <button type="submit" class="btn" style="background:#c62828;">Trigger Immediate Request</button>
+            <div class="card p-3 card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="challenge-title mb-0">⏱️ High-Frequency Cashout</h6>
+                    <span class="badge bg-warning text-dark badge-owasp">A04:2021-Concurrency Risk</span>
+                </div>
+                <p class="small text-muted">Abuse multithreading latency to pull funds past zero thresholds using concurrent triggers.</p>
+                <form action="/instant-withdraw" method="POST" class="row g-2">
+                    <div class="col-auto"><input type="number" name="amount" class="form-control form-control-sm bg-dark text-white border-secondary" value="1000" style="width: 120px;"></div>
+                    <div class="col-auto"><button type="submit" class="btn btn-sm btn-danger px-3">Execute Instant Cashout</button></div>
                 </form>
             </div>
 
-            <div class="challenge-block">
-                <h4><i class="fa-solid fa-boxes-stacked"></i> Shop Inventory & Price Manipulation (Insecure Design)</h4>
-                <p>Exploit mathematical handling variables inside purchase forms. Current iPhone Stock: <strong>{{ stock }} units</strong></p>
-                <form action="/buy-gift" method="POST">
-                    Quantity Order: <input type="number" name="qty" value="1" style="width:60px; padding:6px;">
-                    <button type="submit" class="btn" style="background:#ff8f00;">Purchase Asset (INR 10000)</button>
+            <div class="card p-3 card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="challenge-title mb-0">🛒 Valuation Parameter Sabotage</h6>
+                    <span class="badge bg-danger badge-owasp">A05:2021-Insecure Design</span>
+                </div>
+                <p class="small text-muted">Manipulate shopping logic variables. Negative values reverse ledger calculation. Current Assets Stock: <strong class="text-white">{{ stock }} left</strong></p>
+                <form action="/buy-gift" method="POST" class="row g-2">
+                    <div class="col-auto"><input type="number" name="qty" class="form-control form-control-sm bg-dark text-white border-secondary" value="-1" style="width:80px;"></div>
+                    <div class="col-auto"><button type="submit" class="btn btn-sm btn-warning text-dark px-3 fw-semibold">Procure Asset (Cost: 10k)</button></div>
                 </form>
             </div>
 
-            <div class="challenge-block">
-                <h4><i class="fa-solid fa-shield-virus"></i> Broken Access Control (IDOR)</h4>
-                <p>Manipulate URL parameters directly to capture the administrator statement mapping structure. <a href="/statement/1" target="_blank" style="color:#00c853; font-weight:bold;">Query ID:1 Statement</a></p>
+            <div class="card p-3 card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="challenge-title mb-0">🕵️‍♂️ Arbitrary Ledger Traversal (IDOR)</h6>
+                    <span class="badge bg-primary badge-owasp">A01:2021-Broken Access</span>
+                </div>
+                <p class="small text-muted">Increment object identifiers directly in the browser's address vector to read alien statement structures.</p>
+                <a href="/statement/{{ current_user.id }}" target="_blank" class="btn btn-sm btn-outline-info d-inline-block">Open Statement Blueprint {{ current_user.id }}</a>
             </div>
 
-            <hr>
-            <h3>Submit Identified Range Flags</h3>
-            <form action="/submit-flag" method="POST">
-                <select name="challenge_id" style="padding: 8px; border-radius: 4px;">
-                    <option value="sql_i">SQL Injection (Login Bypass)</option>
-                    <option value="race_cond">Race Condition Withdrawal</option>
-                    <option value="design_stock">Insecure Design Stock</option>
-                    <option value="idor">IDOR Account Leak</option>
-                    <option value="integrity">Cookie Priv-Escation</option>
-                </select>
-                <input type="text" name="flag" placeholder="FLAG{...}" style="padding: 8px; width: 40%;" required>
-                <button type="submit" class="btn" style="background:#00c853;">Validate Flag</button>
-            </form>
+            <div class="card p-3 card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="challenge-title mb-0">📝 Persistent Injection Payload (Stored XSS)</h6>
+                    <span class="badge bg-info text-dark badge-owasp">A03:2021-Injection</span>
+                </div>
+                <p class="small text-muted">Inject malicious script triggers into public logs. Execute an alert script block to yield the target token flag.</p>
+                <form action="/scoreboard" method="POST" class="mb-3">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="feedback_text" class="form-control bg-dark text-white border-secondary" placeholder="<script>alert('FLAG{...}')</script>">
+                        <button type="submit" class="btn btn-primary">Inject Log Memo</button>
+                    </div>
+                </form>
+                <div class="p-2 bg-dark rounded border border-secondary small">
+                    <span class="text-muted">Live Workspace Terminal View:</span> <code class="text-light">{{ current_user.feedback | safe }}</code>
+                </div>
+            </div>
+
+            <div class="card p-3 card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="challenge-title mb-0">📟 Remote Host Infrastructure Diagnostics</h6>
+                    <span class="badge bg-info text-dark badge-owasp">A03:2021-OS Command Injection</span>
+                </div>
+                <p class="small text-muted">Leverage diagnostic query concatenations (<code>;</code> or <code>&&</code>) to force server terminals to leak system states.</p>
+                <form action="/ping-server" method="POST">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="ip_address" class="form-control bg-dark text-white border-secondary" placeholder="127.0.0.1; cat flag_source...">
+                        <button type="submit" class="btn btn-secondary">Transmit Packet Command</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="card" style="max-width: 380px;">
-            <h3>Range Leaderboard</h3>
-            <table>
-                <tr><th>Rank</th><th>User Matrix</th><th>Score Profile</th></tr>
-                {% for u in users %}
-                <tr style="background: {% if u.username == current_user.username %}#e8f5e9{% else %}white{% endif %};">
-                    <td>{{ loop.index }}</td>
-                    <td>{{ u.username }}</td>
-                    <td><strong>{{ u.score }} pts</strong></td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            {% if is_admin %}
-            <div style="margin-top: 20px; background: #fff3e0; padding: 15px; border-radius: 6px; border-left: 5px solid #ff9800;">
-                <h4 style="margin:0 0 5px 0; color:#e65100;"><i class="fa-solid fa-key"></i> Cryptographic/Integrity Compromise</h4>
-                <p style="margin:0; font-size:13px;">Cookie tampered successfully! Administrative Override Flag: <strong>FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}</strong></p>
+        <div class="col-md-4">
+            <div class="card p-3 card-custom bg-dark border-secondary">
+                <h5 class="fw-bold text-white mb-3">Submit Secure Token</h5>
+                <form action="/submit-flag" method="POST">
+                    <div class="mb-2">
+                        <label class="small text-muted mb-1">Target Mission Objective:</label>
+                        <select name="challenge_id" class="form-select form-select-sm bg-dark text-white border-secondary">
+                            <option value="sql_i">SQL Injection Auth Bypass</option>
+                            <option value="race_cond">Race Condition Cashout</option>
+                            <option value="design_stock">Valuation Parameter Sabotage</option>
+                            <option value="idor">IDOR Statement Harvesting</option>
+                            <option value="integrity">Cookie Privilege Escalation</option>
+                            <option value="xss">Stored XSS Alert Payload</option>
+                            <option value="cmd_i">OS Command Injection Takeover</option>
+                            <option value="robots">Robots.txt Information Leak</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" name="flag" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="FLAG{...}" required>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Authenticate Security Flag</button>
+                </form>
             </div>
-            {% endif %}
+
+            <div class="card p-3 card-custom bg-dark border-secondary">
+                <h5 class="fw-bold text-white mb-2">Range Leaderboard Matrix</h5>
+                <table class="table table-dark table-hover table-sm text-center small mt-2 mb-0">
+                    <thead>
+                        <tr class="text-muted"><th>Rank</th><th>Agent Matrix</th><th>Score Profile</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr class="{% if u.id == current_user.id %}table-active text-info{% endif %}">
+                            <td>{{ loop.index }}</td>
+                            <td>{{ u.username }}</td>
+                            <td class="fw-bold text-success">{{ u.score }} PTS</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+</div>
+
 </body>
 </html>
