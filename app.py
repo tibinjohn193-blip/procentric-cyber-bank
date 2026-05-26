@@ -1,49 +1,63 @@
-import os
-import time
-import sqlite3
-from flask import Flask, render_template, redirect, url_for, request, flash, make_response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'procentric_super_secret_key_2026'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///procentric_bank.db'
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = 'super-secret-key-12345'
 
-login_manager = LoginManager()
-login_manager.init_app(app)
+# Render-ൽ ഇൻസ്റ്റൻസ് ഫോൾഡർ പാത്ത് സെറ്റ് ചെയ്യുന്നു
+instance_path = os.path.join(app.root_path, 'instance')
+os.makedirs(instance_path, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'bank.db')}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Global challenge stock item count
+stock = 5
+
+# --- Database Models ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
     balance = db.Column(db.Integer, default=5000)
     score = db.Column(db.Integer, default=0)
-    solved_challenges = db.Column(db.String(300), default="")
-
-SHOP_STOCK = {"iphone": 1}
-
-FLAGS = {
-    "sql_i": "FLAG{A03_SQL_INJECTION_BYPASS_SUCCESS}",
-    "crypto": "FLAG{A02_PLAINTEXT_PASSWORD_EXPOSED}",
-    "idor": "FLAG{A01_IDOR_BANK_STATEMENT_LEAK}",
-    "design_stock": "FLAG{A04_INSECURE_DESIGN_STOCK_BYPASS}",
-    "race_cond": "FLAG{RACE_CONDITION_TRANSACTION_FRAUD}",
-    "config": "FLAG{A05_SECURITY_MISCONFIGURATION_EXPOSED}",
-    "xss": "FLAG{A03_XSS_STORED_SCRIPT_EXECUTION}",
-    "csrf": "FLAG{A01_CSRF_MONEY_DRAINED_WITHOUT_TOKEN}",
-    "brute": "FLAG{A07_BRUTE_FORCE_CREDENTIAL_STUFFING}",
-    "integrity": "FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}"
-}
+    solved_challenges = db.Column(db.String(500), default="")
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# CRITICAL FIX: Gunicorn റൺ ചെയ്യുമ്പോൾ ടേബിൾ ക്രിയേറ്റ് ചെയ്യാൻ ഇത് സഹായിക്കും
+with app.app_context():
+    db.create_all()
+
+# --- Routes ---
 @app.route('/')
 def home():
     return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists!')
+            return redirect(url_for('register'))
+            
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Account created successfully! Please log in.')
+        return redirect(url_for('login'))
+        
+    return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -51,134 +65,97 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        try:
-            conn = sqlite3.connect('instance/procentric_bank.db')
-            cursor = conn.cursor()
-            query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
-            cursor.execute(query)
-            user_row = cursor.fetchone()
-            conn.close()
-            
-            if user_row:
-                user = User.query.get(user_row[0])
-                login_user(user)
-                resp = make_response(redirect(url_for('scoreboard')))
-                resp.set_cookie('role', 'customer')
-                return resp
-        except Exception as e:
-            pass
-
+        # SQL Injection Vulnerability Context
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)
-            resp = make_response(redirect(url_for('scoreboard')))
-            resp.set_cookie('role', 'customer')
-            return resp
+            return redirect(url_for('scoreboard'))
+        else:
+            flash('Invalid professional credentials.')
             
-        flash('Invalid Username or Password!')
     return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists!')
-            return redirect(url_for('register'))
-        
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Account created successfully! Please Log In.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
 
 @app.route('/scoreboard')
 @login_required
 def scoreboard():
-    all_users = User.query.order_by(User.score.desc()).all()
-    user_role = request.cookies.get('role')
-    is_admin = True if user_role == 'admin' else False
-    return render_template('scoreboard.html', users=all_users, is_admin=is_admin, stock=SHOP_STOCK["iphone"])
+    users = User.query.order_by(User.score.desc()).all()
+    # Check if admin privilege escalation active via cookie dummy trigger
+    is_admin = request.cookies.get('role') == 'admin'
+    return render_template('scoreboard.html', users=users, stock=stock, is_admin=is_admin)
 
 @app.route('/instant-withdraw', methods=['POST'])
 @login_required
 def instant_withdraw():
-    amount = int(request.form.get('amount'))
+    amount = int(request.form.get('amount', 0))
+    if amount <= 0:
+        flash('Invalid transaction capital value.')
+        return redirect(url_for('scoreboard'))
+        
     if current_user.balance >= amount:
-        time.sleep(0.4) 
-        current_user.balance -= amount
+        # Intentional Race Condition window entrypoint
+        import time
+        current_balance = current_user.balance
+        time.sleep(0.5) 
+        current_user.balance = current_balance - amount
         db.session.commit()
-        if current_user.balance < 0:
-            flash(f"Exploit Successful! Race Condition Triggered. Flag: {FLAGS['race_cond']}")
-        else:
-            flash(f"Successfully withdrew INR {amount}")
+        flash(f'Settlement of INR {amount} completed successfully!')
     else:
-        flash("Insufficient funds for instantaneous withdrawal!")
+        flash('Insufficient liquidity in current corporate profile.')
+        
     return redirect(url_for('scoreboard'))
 
 @app.route('/buy-gift', methods=['POST'])
 @login_required
 def buy_gift():
-    qty = int(request.form.get('qty'))
-    price = 10000
-    total_cost = price * qty
+    global stock
+    qty = int(request.form.get('qty', 1))
+    cost = qty * 10000
     
-    if current_user.balance >= total_cost:
-        current_user.balance -= total_cost
-        SHOP_STOCK["iphone"] -= qty
+    if current_user.balance >= cost and stock >= qty:
+        current_user.balance -= cost
+        stock -= qty
         db.session.commit()
-        if qty < 0 or SHOP_STOCK["iphone"] < 0:
-            flash(f"Inventory/Price Integrity Violated! Flag: {FLAGS['design_stock']}")
-        else:
-            flash("Purchased Successfully!")
+        flash('Asset procurement order successful!')
     else:
-        flash("Transaction declined due to insufficient balance.")
+        flash('Order rejected: Asset valuation limits or stock failure.')
+        
     return redirect(url_for('scoreboard'))
 
-@app.route('/statement/<int:account_id>')
+@app.route('/statement/<int:user_id>')
 @login_required
-def view_statement(account_id):
-    target_user = User.query.get(account_id)
-    if target_user:
-        return f"<h3>Procentric Cyber Bank Statement</h3>Owner Account: {target_user.username}<br>Current Balance: INR {target_user.balance}<br>Flag: {FLAGS['idor']}"
-    return "Statement Not Found", 404
-
-@app.route('/transfer-funds', methods=['POST'])
-@login_required
-def transfer_funds():
-    to_user = request.form.get('to_user')
-    amount = int(request.form.get('amount'))
-    recipient = User.query.filter_by(username=to_user).first()
-    if recipient and current_user.balance >= amount:
-        current_user.balance -= amount
-        recipient.balance += amount
-        db.session.commit()
-        return jsonify({"status": "Success", "flag": FLAGS['csrf']})
-    return jsonify({"status": "Failed"}), 400
-
-@app.route('/backup-config.cfg')
-def backup_config():
-    return f"DB_NAME=procentric_bank.db\nDEBUG=True\nFLAG_CONFIG={FLAGS['config']}\nADMIN_PASSWORD=SuperSecureAdminPassword2026"
+def statement(user_id):
+    # IDOR Vulnerability context
+    target_user = User.query.get_or_400(user_id)
+    return f"<h1>Official Statement Profile Ledger</h1><p>Client: {target_user.username}</p><p>Liquidity: INR {target_user.balance}</p>"
 
 @app.route('/submit-flag', methods=['POST'])
 @login_required
 def submit_flag():
     challenge_id = request.form.get('challenge_id')
-    submitted_flag = request.form.get('flag').strip()
-    solved_list = current_user.solved_challenges.split(",") if current_user.solved_challenges else []
+    flag_submitted = request.form.get('flag', '').strip()
     
-    if challenge_id in solved_list:
-        flash("You have already claimed points for this challenge!")
-    elif FLAGS.get(challenge_id) == submitted_flag:
-        current_user.score += 100
-        solved_list.append(challenge_id)
-        current_user.solved_challenges = ",".join(solved_list)
-        db.session.commit()
-        flash("Brilliant! Correct Flag. +100 Points added to your rank.")
+    # Static flags list mapping
+    flags = {
+        "sql_i": "FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}",
+        "race_cond": "FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}",
+        "design_stock": "FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}",
+        "idor": "FLAG{A01_BROKEN_OBJECT_LEVEL_STATEMENT}",
+        "integrity": "FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}"
+    }
+    
+    if challenge_id in flags and flags[challenge_id] == flag_submitted:
+        solved_list = current_user.solved_challenges.split(',') if current_user.solved_challenges else []
+        if challenge_id not in solved_list:
+            solved_list.append(challenge_id)
+            current_user.solved_challenges = ','.join(solved_list)
+            current_user.score += 100
+            db.session.commit()
+            flash('Flag validated successfully! +100 Points added.')
+        else:
+            flash('This flag was already submitted by your profile.')
     else:
-        flash("Invalid Flag format or payload. Keep auditing!")
+        flash('Invalid flag signature payload.')
+        
     return redirect(url_for('scoreboard'))
 
 @app.route('/logout')
@@ -188,9 +165,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        if not User.query.filter_by(username="admin").first():
-            db.session.add(User(username="admin", password="SuperSecureAdminPassword2026"))
-            db.session.commit()
     app.run(debug=True)
