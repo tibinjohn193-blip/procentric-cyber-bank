@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Procentric Bank - Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0a192f; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 10px; text-align: center; width: 100%; max-width: 350px; }
+        h2 { color: #0a192f; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #00c853; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Establish Cyber Identity</h2>
+        <form action="/register" method="POST">
+            <input type="text" name="username" placeholder="Choose Username" required>
+            <input type="password" name="password" placeholder="Set Access Password" required>
+            <button type="submit">Initialize Account</button>
+        </form>
+    </div>
+</body>
+</html>

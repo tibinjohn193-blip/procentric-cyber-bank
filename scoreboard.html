@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Procentric Cyber Bank - Terminal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; }
+        .navbar { background: #0a192f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #00c853; }
+        .main-container { display: flex; padding: 30px; gap: 30px; flex-wrap: wrap; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 320px; }
+        .balance-box { background: linear-gradient(135deg, #0a192f, #172a45); color: #00c853; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .challenge-block { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 5px solid #0a192f; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #f5f5f5; }
+        .btn { background: #0a192f; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2><i class="fa-solid fa-server"></i> Procentric Bank Lab Engine</h2>
+        <div>
+            <span>Operator: <strong>{{ current_user.username }}</strong> 🌐 | </span>
+            <a href="/logout" style="color: #ffc107; text-decoration: none; font-weight: bold;">Terminate Session</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="background: #e8f5e9; color: #2e7d32; padding: 15px; margin: 20px 30px 0 30px; border-radius: 6px; border-left: 5px solid #2e7d32; font-weight: bold;">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="main-container">
+        <div class="card">
+            <div class="balance-box">
+                <h4 style="margin:0; color:#fff; opacity:0.7;">Liquid Core Balance</h4>
+                <h1 style="margin:5px 0 0 0;">INR {{ current_user.balance }}.00</h1>
+            </div>
+
+            <h3>Auditable Target Vulnerabilities (OWASP Top 10 Contexts)</h3>
+
+            <div class="challenge-block">
+                <h4><i class="fa-solid fa-gauge-high"></i> Race Condition (High-Frequency Withdrawal)</h4>
+                <p>Abuse structural context-switching delays by multithreading concurrent requests to empty account balances past zero.</p>
+                <form action="/instant-withdraw" method="POST">
+                    <input type="number" name="amount" value="3000" style="width: 80px; padding:6px;">
+                    <button type="submit" class="btn" style="background:#c62828;">Trigger Immediate Request</button>
+                </form>
+            </div>
+
+            <div class="challenge-block">
+                <h4><i class="fa-solid fa-boxes-stacked"></i> Shop Inventory & Price Manipulation (Insecure Design)</h4>
+                <p>Exploit mathematical handling variables inside purchase forms. Current iPhone Stock: <strong>{{ stock }} units</strong></p>
+                <form action="/buy-gift" method="POST">
+                    Quantity Order: <input type="number" name="qty" value="1" style="width:60px; padding:6px;">
+                    <button type="submit" class="btn" style="background:#ff8f00;">Purchase Asset (INR 10000)</button>
+                </form>
+            </div>
+
+            <div class="challenge-block">
+                <h4><i class="fa-solid fa-shield-virus"></i> Broken Access Control (IDOR)</h4>
+                <p>Manipulate URL parameters directly to capture the administrator statement mapping structure. <a href="/statement/1" target="_blank" style="color:#00c853; font-weight:bold;">Query ID:1 Statement</a></p>
+            </div>
+
+            <hr>
+            <h3>Submit Identified Range Flags</h3>
+            <form action="/submit-flag" method="POST">
+                <select name="challenge_id" style="padding: 8px; border-radius: 4px;">
+                    <option value="sql_i">SQL Injection (Login Bypass)</option>
+                    <option value="race_cond">Race Condition Withdrawal</option>
+                    <option value="design_stock">Insecure Design Stock</option>
+                    <option value="idor">IDOR Account Leak</option>
+                    <option value="integrity">Cookie Priv-Escation</option>
+                </select>
+                <input type="text" name="flag" placeholder="FLAG{...}" style="padding: 8px; width: 40%;" required>
+                <button type="submit" class="btn" style="background:#00c853;">Validate Flag</button>
+            </form>
+        </div>
+
+        <div class="card" style="max-width: 380px;">
+            <h3>Range Leaderboard</h3>
+            <table>
+                <tr><th>Rank</th><th>User Matrix</th><th>Score Profile</th></tr>
+                {% for u in users %}
+                <tr style="background: {% if u.username == current_user.username %}#e8f5e9{% else %}white{% endif %};">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ u.username }}</td>
+                    <td><strong>{{ u.score }} pts</strong></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            {% if is_admin %}
+            <div style="margin-top: 20px; background: #fff3e0; padding: 15px; border-radius: 6px; border-left: 5px solid #ff9800;">
+                <h4 style="margin:0 0 5px 0; color:#e65100;"><i class="fa-solid fa-key"></i> Cryptographic/Integrity Compromise</h4>
+                <p style="margin:0; font-size:13px;">Cookie tampered successfully! Administrative Override Flag: <strong>FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
