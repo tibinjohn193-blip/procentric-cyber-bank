@@ -2,48 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register | Procentric Cyber Range</title>
+    <title>IDB - Open Digital Account</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); min-height: 100vh; display: flex; align-items: center; color: white; }
-        .card-custom { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; }
+        body { background-color: #f4f6f9; font-family: sans-serif; }
+        .navbar { background-color: #003366; }
+        .card { border-top: 5px solid #138808; }
+        .btn-success { background-color: #138808; border: none; }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card p-4 card-custom shadow-lg">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold text-info">🏦 Procentric Bank</h2>
-                    <p class="text-muted small">Create your operative account to enter the range</p>
-                </div>
-                
-                {% with messages = get_flashed_messages() %}
-                  {% if messages %}
-                    {% for message in messages %}
-                      <div class="alert alert-danger btn-sm py-2 small">{{ message }}</div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
+    <nav class="navbar navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">🏛️ Indian Digital Bank (IDB)</a>
+        </div>
+    </nav>
 
-                <form action="/register" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-semibold tracking-wider text-muted">Choose Username</label>
-                        <input type="text" name="username" class="form-control bg-dark text-white border-secondary" placeholder="e.g. attacker1" required>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow p-4">
+                    <h3 class="text-center mb-4" style="color: #138808;">Digital Savings Account Setup</h3>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-warning text-center small py-2">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Choose User ID</label>
+                            <input type="text" name="username" class="form-control" placeholder="Type username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Login Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Choose a strong password" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" required checked>
+                            <label class="form-check-label small text-muted">
+                                I agree to the Indian Banking Terms and Regulatory policies.
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2">Open Savings Account</button>
+                    </form>
+                    <hr>
+                    <div class="text-center">
+                        <a href="/login" class="text-decoration-none small" style="color: #003366;">Return to Login Portal</a>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label small text-uppercase fw-semibold tracking-wider text-muted">Set Password</label>
-                        <input type="password" name="password" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-info w-100 fw-bold text-dark mb-3">Initialize Profile</button>
-                </form>
-                <div class="text-center">
-                    <p class="small text-muted mb-0">Already registered? <a href="/login" class="text-info text-decoration-none">Access Portal</a></p>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>
