@@ -2,31 +2,30 @@ from flask import Flask, render_template, request, redirect, url_for, flash, mak
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
-import subprocess
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super-secret-key-12345'
+app.config['SECRET_KEY'] = 'secure-indian-digital-bank-token-9988'
 
+# Database Setup
 instance_path = os.path.join(app.root_path, 'instance')
 os.makedirs(instance_path, exist_ok=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'bank.db')}"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'indian_bank.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-stock = 5
+fd_count = 5
 
-# --- Database Models ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
-    balance = db.Column(db.Integer, default=5000)
+    account_number = db.Column(db.String(20), unique=True, nullable=False)
+    balance = db.Column(db.Integer, default=50000) # ₹50,000 initial balance
     score = db.Column(db.Integer, default=0)
     solved_challenges = db.Column(db.String(500), default="")
-    feedback = db.Column(db.String(500), default="No feedback submitted yet.") # XSS ഒളിപ്പിക്കാൻ
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -35,36 +34,29 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
-# --- Routes ---
+def generate_acc_num(username):
+    import hashlib
+    hash_val = hashlib.md5(username.encode()).hexdigest()
+    return "999" + str(int(hash_val, 16))[:9]
+
 @app.route('/')
 def home():
     return redirect(url_for('login'))
-
-@app.route('/robots.txt')
-def robots():
-    # Challenge 8: Sensitive Data Exposure via robots.txt
-    return "User-agent: *\nDisallow: /secret-audit-vault-backup/\n"
-
-@app.route('/secret-audit-vault-backup/')
-def secret_vault():
-    return "<h1>🔒 Secure Audit Vault</h1><p>FLAG{A05_SENSITIVE_DATA_ROBOTS_TXT_EXPOSURE}</p>"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
         if User.query.filter_by(username=username).first():
             flash('Username already exists!')
             return redirect(url_for('register'))
-            
-        new_user = User(username=username, password=password)
+        acc_num = generate_acc_num(username)
+        new_user = User(username=username, password=password, account_number=acc_num)
         db.session.add(new_user)
         db.session.commit()
         flash('Account created successfully! Please log in.')
         return redirect(url_for('login'))
-        
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -72,87 +64,66 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
-        # SQLi Vulnerability
+        # Vulnerable SQL Injection Query Context
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)
-            return redirect(url_for('scoreboard'))
+            return redirect(url_for('dashboard'))
         else:
-            flash('Invalid professional credentials.')
-            
+            flash('Invalid User ID or Password!')
     return render_template('login.html')
 
-@app.route('/scoreboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
 @login_required
-def scoreboard():
-    # Challenge 6: Stored XSS (Feedback Form)
-    if request.method == 'POST' and request.form.get('feedback_text'):
-        current_user.feedback = request.form.get('feedback_text')
-        db.session.commit()
-        flash('Feedback submitted successfully!')
-
-    users = User.query.order_by(User.score.desc()).all()
+def dashboard():
     is_admin = request.cookies.get('role') == 'admin'
-    return render_template('scoreboard.html', users=users, stock=stock, is_admin=is_admin)
+    return render_template('scoreboard.html', user=current_user, fd_count=fd_count, is_admin=is_admin)
 
-@app.route('/instant-withdraw', methods=['POST'])
+@app.route('/tasks')
 @login_required
-def instant_withdraw():
+def tasks():
+    users = User.query.order_by(User.score.desc()).all()
+    return render_template('tasks.html', users=users, current_user=current_user)
+
+@app.route('/quick-transfer', methods=['POST'])
+@login_required
+def quick_transfer():
     amount = int(request.form.get('amount', 0))
     if amount <= 0:
-        flash('Invalid transaction capital value.')
-        return redirect(url_for('scoreboard'))
-        
+        flash('Cannot process invalid transaction amount!')
+        return redirect(url_for('dashboard'))
     if current_user.balance >= amount:
         import time
         current_balance = current_user.balance
-        time.sleep(0.5) 
+        time.sleep(0.4) # Race Condition window
         current_user.balance = current_balance - amount
         db.session.commit()
-        flash(f'Settlement of INR {amount} completed successfully!')
+        flash(f'INR {amount} transferred successfully via IMPS Transfer!')
     else:
-        flash('Insufficient liquidity in current corporate profile.')
-        
-    return redirect(url_for('scoreboard'))
+        flash('Insufficient liquidity in current bank account!')
+    return redirect(url_for('dashboard'))
 
-@app.route('/buy-gift', methods=['POST'])
+@app.route('/open-fd', methods=['POST'])
 @login_required
-def buy_gift():
-    global stock
+def open_fd():
+    global fd_count
     qty = int(request.form.get('qty', 1))
     cost = qty * 10000
-    
-    if current_user.balance >= cost and stock >= qty:
+    if current_user.balance >= cost and fd_count >= qty:
         current_user.balance -= cost
-        stock -= qty
+        fd_count -= qty
         db.session.commit()
-        flash('Asset procurement order successful!')
+        flash('Fixed Deposit (FD) account opened successfully!')
     else:
-        flash('Order rejected: Asset valuation limits or stock failure.')
-        
-    return redirect(url_for('scoreboard'))
+        flash('FD procurement rejected. Verify balance limits.')
+    return redirect(url_for('dashboard'))
 
-@app.route('/statement/<int:user_id>')
+@app.route('/passbook/<int:user_id>')
 @login_required
-def statement(user_id):
+def passbook(user_id):
+    # IDOR Vulnerability
     target_user = User.query.get_or_400(user_id)
-    return f"<h1>Official Statement Profile Ledger</h1><p>Client: {target_user.username}</p><p>Liquidity: INR {target_user.balance}</p>"
-
-@app.route('/ping-server', methods=['POST'])
-@login_required
-def ping_server():
-    # Challenge 7: OS Command Injection
-    ip_address = request.form.get('ip_address', '')
-    if ip_address:
-        try:
-            # Intentional vulnerable execution (shell=True)
-            command = f"ping -c 1 {ip_address}"
-            output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True)
-            return f"<h3>Network Diagnostics Result:</h3><pre>{output}</pre><a href='/scoreboard'>Back to Dashboard</a>"
-        except Exception as e:
-            return f"<h3>Execution Failure:</h3><pre>{str(e)}</pre><a href='/scoreboard'>Back to Dashboard</a>"
-    return redirect(url_for('scoreboard'))
+    return f"<div style='font-family:sans-serif; padding:20px;'><h2>Indian Digital Bank - Official E-Passbook Ledger</h2><hr><p><b>Account Holder:</b> {target_user.username}</p><p><b>Account Number:</b> {target_user.account_number}</p><p><b>Available Liquidity:</b> ₹ {target_user.balance}</p></div>"
 
 @app.route('/submit-flag', methods=['POST'])
 @login_required
@@ -165,10 +136,7 @@ def submit_flag():
         "race_cond": "FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}",
         "design_stock": "FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}",
         "idor": "FLAG{A01_BROKEN_OBJECT_LEVEL_STATEMENT}",
-        "integrity": "FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}",
-        "xss": "FLAG{A03_STORED_CROSS_SITE_SCRIPTING_ALERT}",
-        "cmd_i": "FLAG{A03_COMMAND_INJECTION_SERVER_TAKEOVER}",
-        "robots": "FLAG{A05_SENSITIVE_DATA_ROBOTS_TXT_EXPOSURE}"
+        "integrity": "FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}"
     }
     
     if challenge_id in flags and flags[challenge_id] == flag_submitted:
@@ -178,19 +146,15 @@ def submit_flag():
             current_user.solved_challenges = ','.join(solved_list)
             current_user.score += 100
             db.session.commit()
-            flash('Flag validated successfully! +100 Points added.')
+            flash('Congratulations! Correct flag submitted. +100 Points added.')
         else:
-            flash('This flag was already submitted by your profile.')
+            flash('This challenge was already solved by your profile.')
     else:
-        flash('Invalid flag signature payload.')
-        
-    return redirect(url_for('scoreboard'))
+        flash('Invalid flag signature payload! Try again.')
+    return redirect(url_for('tasks'))
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
