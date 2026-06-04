@@ -6,38 +6,31 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
-        .navbar { background-color: #1e293b; border-bottom: 2px solid #ff9933; }
         .card { background-color: #1e293b; border: 1px solid #334155; color: white; }
-        .table { color: white; }
         .challenge-title { color: #ff9933; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <nav class="navbar navbar-dark shadow-sm">
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
         <div class="container">
-            <span class="navbar-brand mb-0 h1 fw-bold text-warning">🎯 IDB Security Vulnerability Lab</span>
+            <span class="navbar-brand fw-bold text-warning">🎯 IDB Security Vulnerability Lab</span>
             <a href="/dashboard" class="btn btn-outline-info btn-sm">Return to Banking Profile</a>
         </div>
     </nav>
 
     <div class="container mt-4">
-        
         {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-warning text-center text-dark fw-bold shadow py-2 small">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+            {% if messages %}{% for message in messages %}<div class="alert alert-warning text-center text-dark fw-bold py-2 small">{{ message }}</div>{% endfor %}{% endif %}
         {% endwith %}
 
         <div class="row">
             <div class="col-md-7">
-                <h4 class="mb-3 text-info fw-bold">Security Flaws to Exploit (5 Challenges)</h4>
+                <h4 class="mb-3 text-info fw-bold">Security Flaws to Exploit (9 Challenges)</h4>
                 
+                <!-- 1 -->
                 <div class="card p-3 mb-3 shadow-sm">
                     <span class="challenge-title">1. NetBanking Auth Bypass (SQL Injection)</span>
-                    <p class="small text-muted mb-2">Bypass the login portal without knowing any valid credentials by manipulating the database backend syntax constraints.</p>
+                    <p class="small text-muted mb-2">Bypass the login screen via database manipulation query syntaxes.</p>
                     <form action="/submit-flag" method="POST" class="row g-2">
                         <input type="hidden" name="challenge_id" value="sql_i">
                         <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
@@ -45,9 +38,10 @@
                     </form>
                 </div>
 
+                <!-- 2 -->
                 <div class="card p-3 mb-3 shadow-sm">
                     <span class="challenge-title">2. Unlimited IMPS Capital Extraction (Race Condition)</span>
-                    <p class="small text-muted mb-2">Trigger concurrent IMPS transfer requests at the exact same millisecond window to trick the server into double-spending validation updates.</p>
+                    <p class="small text-muted mb-2">Send concurrent money transfer requests via Burp Suite Intruder.</p>
                     <form action="/submit-flag" method="POST" class="row g-2">
                         <input type="hidden" name="challenge_id" value="race_cond">
                         <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
@@ -55,9 +49,10 @@
                     </form>
                 </div>
 
+                <!-- 3 -->
                 <div class="card p-3 mb-3 shadow-sm">
                     <span class="challenge-title">3. Malicious Balance Allocation (Insecure Design)</span>
-                    <p class="small text-muted mb-2">Tamper with the inputs on the Fixed Deposit (FD) allotment request parameters to increase your active ledger balance assets.</p>
+                    <p class="small text-muted mb-2">Type a negative number into the Fixed Deposit allocation form.</p>
                     <form action="/submit-flag" method="POST" class="row g-2">
                         <input type="hidden" name="challenge_id" value="design_stock">
                         <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
@@ -65,9 +60,10 @@
                     </form>
                 </div>
 
+                <!-- 4 -->
                 <div class="card p-3 mb-3 shadow-sm">
                     <span class="challenge-title">4. Third-Party Passbook Harvesting (IDOR)</span>
-                    <p class="small text-muted mb-2">Modify the index references embedded inside the digital passbook query endpoints to fetch statement profiles belonging to alternative clients.</p>
+                    <p class="small text-muted mb-2">Change the account number index inside the E-Passbook URL bar.</p>
                     <form action="/submit-flag" method="POST" class="row g-2">
                         <input type="hidden" name="challenge_id" value="idor">
                         <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
@@ -75,34 +71,72 @@
                     </form>
                 </div>
 
+                <!-- 5 -->
                 <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">5. Administrative Session Override (Cookie Tampering)</span>
-                    <p class="small text-muted mb-2">Manipulate session variables in browser cookies to bypass privilege checks and gain Chief Branch Manager access permissions.</p>
+                    <span class="challenge-title">5. Confidential File Harvesting (IDOR File Download)</span>
+                    <p class="small text-muted mb-2">Click the loan receipt download button. Change the receipt number id in the URL parameter to a secret internal asset file like 999.</p>
                     <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="integrity">
+                        <input type="hidden" name="challenge_id" value="file_download">
                         <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
                         <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
                     </form>
                 </div>
+
+                <!-- 6 -->
+                <div class="card p-3 mb-3 shadow-sm">
+                    <span class="challenge-title">6. Hidden Management Portal Discovery (Forced Browsing)</span>
+                    <p class="small text-muted mb-2">Guess the hidden management link manually by appending /admin-portal to the URL.</p>
+                    <form action="/submit-flag" method="POST" class="row g-2">
+                        <input type="hidden" name="challenge_id" value="forced_browse">
+                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
+                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
+                    </form>
+                </div>
+
+                <!-- 7 -->
+                <div class="card p-3 mb-3 shadow-sm">
+                    <span class="challenge-title">7. Weak Admin Account Guessing (Brute Force)</span>
+                    <p class="small text-muted mb-2">Try logging into the portal using traditional common admin credentials like admin/admin123.</p>
+                    <form action="/submit-flag" method="POST" class="row g-2">
+                        <input type="hidden" name="challenge_id" value="weak_auth">
+                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
+                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
+                    </form>
+                </div>
+
+                <!-- 8 -->
+                <div class="card p-3 mb-3 shadow-sm">
+                    <span class="challenge-title">8. Server Context Code Injection (Template Exploit)</span>
+                    <p class="small text-muted mb-2">Create a new bank account with the username <b>{{user}}</b> and look at the welcome message in the dashboard.</p>
+                    <form action="/submit-flag" method="POST" class="row g-2">
+                        <input type="hidden" name="challenge_id" value="ssti_leak">
+                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
+                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
+                    </form>
+                </div>
+
+                <!-- 9 -->
+                <div class="card p-3 mb-3 shadow-sm">
+                    <span class="challenge-title">9. Faulty Self-Transaction Policy (Business Logic Flaw)</span>
+                    <p class="small text-muted mb-2">Try processing an IMPS money transfer where the destination beneficiary account number is your own account number.</p>
+                    <form action="/submit-flag" method="POST" class="row g-2">
+                        <input type="hidden" name="challenge_id" value="logic_flaw">
+                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
+                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
+                    </form>
+                </div>
+
             </div>
 
             <div class="col-md-5">
-                <h4 class="mb-3 text-warning fw-bold">🏆 Global Active Leaderboard</h4>
+                <h4 class="mb-3 text-warning fw-bold">🏆 Leaderboard</h4>
                 <div class="card p-3 shadow text-white">
-                    <table class="table table-dark table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>User ID</th>
-                                <th>Score Matrix</th>
-                            </tr>
-                        </thead>
+                    <table class="table table-dark mb-0">
+                        <thead><tr><th>Rank</th><th>User ID</th><th>Score</th></tr></thead>
                         <tbody>
                             {% for u in users %}
                             <tr class="{% if u.id == current_user.id %}table-primary text-dark fw-bold{% endif %}">
-                                <td>{{ loop.index }}</td>
-                                <td>{{ u.username }}</td>
-                                <td><span class="badge bg-success">{{ u.score }} Pts</span></td>
+                                <td>{{ loop.index }}</td><td>{{ u.username }}</td><td><span class="badge bg-success">{{ u.score }} / 900 Pts</span></td>
                             </tr>
                             {% endfor %}
                         </tbody>
