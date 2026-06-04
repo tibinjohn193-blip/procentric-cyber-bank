@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
@@ -23,7 +23,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     account_number = db.Column(db.String(20), unique=True, nullable=False)
-    balance = db.Column(db.Integer, default=50000) # ₹50,000 initial balance
+    balance = db.Column(db.Integer, default=50000) 
     score = db.Column(db.Integer, default=0)
     solved_challenges = db.Column(db.String(500), default="")
 
@@ -31,8 +31,16 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+def create_default_admin():
+    admin_user = User.query.filter_by(username='admin').first()
+    if not admin_user:
+        new_admin = User(username='admin', password='admin123', account_number='999123456789')
+        db.session.add(new_admin)
+        db.session.commit()
+
 with app.app_context():
     db.create_all()
+    create_default_admin()
 
 def generate_acc_num(username):
     import hashlib
@@ -64,7 +72,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        # Vulnerable SQL Injection Query Context
+        # Vulnerable SQL Query Simulation
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)
@@ -76,8 +84,13 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    is_admin = request.cookies.get('role') == 'admin'
-    return render_template('scoreboard.html', user=current_user, fd_count=fd_count, is_admin=is_admin)
+    welcome_name = current_user.username
+    ssti_triggered = False
+    if "{{" in welcome_name and "user" in welcome_name:
+        ssti_triggered = True
+        welcome_name = "SYSTEM_KEY_7733 (FLAG{A03_SERVER_SIDE_TEMPLATE_INJECTION})"
+
+    return render_template('scoreboard.html', user=current_user, fd_count=fd_count, welcome_name=welcome_name, ssti_triggered=ssti_triggered)
 
 @app.route('/tasks')
 @login_required
@@ -89,18 +102,27 @@ def tasks():
 @login_required
 def quick_transfer():
     amount = int(request.form.get('amount', 0))
+    target_acc = request.form.get('target_account', '').strip()
+
     if amount <= 0:
         flash('Cannot process invalid transaction amount!')
         return redirect(url_for('dashboard'))
+    
+    if target_acc == current_user.account_number:
+        current_user.balance += amount  
+        db.session.commit()
+        flash(f'Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
+        return redirect(url_for('dashboard'))
+
     if current_user.balance >= amount:
         import time
         current_balance = current_user.balance
-        time.sleep(0.4) # Race Condition window
+        time.sleep(0.4) 
         current_user.balance = current_balance - amount
         db.session.commit()
         flash(f'INR {amount} transferred successfully via IMPS Transfer!')
     else:
-        flash('Insufficient liquidity in current bank account!')
+        flash('Insufficient liquidity in bank account!')
     return redirect(url_for('dashboard'))
 
 @app.route('/open-fd', methods=['POST'])
@@ -121,9 +143,24 @@ def open_fd():
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
-    # IDOR Vulnerability
-    target_user = User.query.get_or_400(user_id)
+    target_user = User.query.get_or_404(user_id)
     return f"<div style='font-family:sans-serif; padding:20px;'><h2>Indian Digital Bank - Official E-Passbook Ledger</h2><hr><p><b>Account Holder:</b> {target_user.username}</p><p><b>Account Number:</b> {target_user.account_number}</p><p><b>Available Liquidity:</b> ₹ {target_user.balance}</p></div>"
+
+# Challenge 5: IDOR File Download
+@app.route('/download/loan_<int:file_id>.pdf')
+@login_required
+def download_loan(file_id):
+    if file_id == 101:
+        return f"<div style='font-family:sans-serif; padding:20px;'><h3>IDB Loan Receipt - Account #101</h3><p>Your basic standard loan statement file is empty.</p></div>"
+    elif file_id == 999:
+        return f"<div style='font-family:sans-serif; padding:20px; background:#e0f2fe;'><h3>⚠️ IDB Corporate Confidential Loan Scheme #999</h3><p><b>Privileged Document Unlocked!</b></p><p>FLAG{{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}}</p></div>"
+    else:
+        return f"<div style='font-family:sans-serif; padding:20px;'><h3>Error 404</h3><p>Loan statement sequence not found.</p></div>"
+
+@app.route('/admin-portal')
+@login_required
+def admin_portal():
+    return "<div style='font-family:sans-serif; padding:40px; text-align:center;'><h2>⚠️ Unauthorized Internal Bank Portal ⚠️</h2><p>You found the hidden admin login endpoint!</p><br><span style='background:#f8d7da; padding:10px; border-radius:5px; font-weight:bold; color:#721c24;'>FLAG{A01_FORCED_BROWSING_HIDDEN_ENDPOINT}</span></div>"
 
 @app.route('/submit-flag', methods=['POST'])
 @login_required
@@ -136,21 +173,25 @@ def submit_flag():
         "race_cond": "FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}",
         "design_stock": "FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}",
         "idor": "FLAG{A01_BROKEN_OBJECT_LEVEL_STATEMENT}",
-        "integrity": "FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}"
+        "file_download": "FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}",
+        "forced_browse": "FLAG{A01_FORCED_BROWSING_HIDDEN_ENDPOINT}",
+        "weak_auth": "FLAG{A02_WEAK_ADMIN_CREDENTIALS_LEAK}",
+        "ssti_leak": "FLAG{A03_SERVER_SIDE_TEMPLATE_INJECTION}",
+        "logic_flaw": "FLAG{A05_BUSINESS_LOGIC_SELF_TRANSFER}"
     }
     
     if challenge_id in flags and flags[challenge_id] == flag_submitted:
         solved_list = current_user.solved_challenges.split(',') if current_user.solved_challenges else []
         if challenge_id not in solved_list:
             solved_list.append(challenge_id)
-            current_user.solved_challenges = ','.join(solved_list)
             current_user.score += 100
+            current_user.solved_challenges = ','.join(solved_list)
             db.session.commit()
-            flash('Congratulations! Correct flag submitted. +100 Points added.')
+            flash('Congratulations! Correct flag submitted. +100 Points.')
         else:
-            flash('This challenge was already solved by your profile.')
+            flash('This challenge was already solved.')
     else:
-        flash('Invalid flag signature payload! Try again.')
+        flash('Invalid flag signature payload!')
     return redirect(url_for('tasks'))
 
 @app.route('/logout')
