@@ -4,35 +4,19 @@
     <meta charset="UTF-8">
     <title>Indian Digital Bank - NetBanking Login</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { background-color: #f4f6f9; font-family: sans-serif; }
-        .navbar { background-color: #003366; }
-        .card { border-top: 5px solid #ff9933; }
-        .btn-primary { background-color: #003366; border: none; }
-        .btn-primary:hover { background-color: #002244; }
-    </style>
 </head>
-<body>
-    <nav class="navbar navbar-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">🏛️ Indian Digital Bank (IDB)</a>
-        </div>
+<body style="background-color: #f4f6f9; font-family: sans-serif;">
+    <nav class="navbar navbar-dark bg-primary shadow-sm">
+        <div class="container"><a class="navbar-brand fw-bold" href="#">🏛️ Indian Digital Bank (IDB)</a></div>
     </nav>
-
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-5">
-                <div class="card shadow p-4">
+                <div class="card shadow p-4" style="border-top: 5px solid #ff9933;">
                     <h3 class="text-center mb-4" style="color: #003366;">Retail NetBanking</h3>
-                    
                     {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-danger text-center small py-2">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
+                        {% if messages %}{% for m in messages %}<div class="alert alert-danger text-center small py-2">{{ m }}</div>{% endfor %}{% endif %}
                     {% endwith %}
-
                     <form method="POST">
                         <div class="mb-3">
                             <label class="form-label">User ID (Customer Username)</label>
@@ -45,12 +29,11 @@
                         <button type="submit" class="btn btn-primary w-100 py-2">Secure Login</button>
                     </form>
                     <hr>
-                    <div class="text-center">
-                        <p class="mb-0 small text-muted">Don't have an account? <a href="/register" style="color: #ff9933; font-weight: bold; text-decoration:none;">Open Account Online</a></p>
-                    </div>
+                    <div class="text-center"><p class="mb-0 small text-muted">Don't have an account? <a href="/register" style="color: #ff9933; font-weight: bold; text-decoration:none;">Open Account Online</a></p></div>
                 </div>
             </div>
         </div>
     </div>
+    <!-- SYSTEM ADVICE: Default deployment profile uses 'admin' username with default standard dictionary credentials. FLAG{A02_WEAK_ADMIN_CREDENTIALS_LEAK} -->
 </body>
 </html>
