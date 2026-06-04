@@ -11,15 +11,14 @@
     </style>
 </head>
 <body>
-
     <div class="bank-header shadow-sm">
         <div class="container d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="mb-0 fw-bold">🏛️ Indian Digital Bank</h2>
-                <small class="text-white-50">Personal Retail NetBanking Profile</small>
+                <h5 class="text-warning my-1">Welcome, {{ welcome_name }}</h5>
             </div>
             <div>
-                <a href="/tasks" class="btn btn-warning fw-bold me-2">🎯 View Lab Challenges (CTF Tasks)</a>
+                <a href="/tasks" class="btn btn-warning fw-bold me-2">🎯 View Lab Challenges</a>
                 <a href="/logout" class="btn btn-outline-light btn-sm">Secure Logout</a>
             </div>
         </div>
@@ -27,11 +26,7 @@
 
     <div class="container mt-4">
         {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-info text-center shadow-sm py-2 small">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+            {% if messages %}{% for message in messages %}<div class="alert alert-info text-center shadow-sm py-2 small">{{ message }}</div>{% endfor %}{% endif %}
         {% endwith %}
 
         <div class="row g-3 mb-4">
@@ -40,10 +35,7 @@
                     <span class="text-muted text-uppercase small fw-bold">Available Balance Ledger</span>
                     <h1 class="display-5 my-2 text-success fw-bold">₹ {{ user.balance }}</h1>
                     <p class="mb-0 text-muted">Account Number: <b>{{ user.account_number }}</b></p>
-                    <p class="small text-muted mb-0">Customer Index ID: #{{ user.id }}</p>
-                    <div class="mt-3">
-                        <a href="/passbook/{{ user.id }}" target="_blank" class="btn btn-sm btn-outline-primary">Check Digital E-Passbook</a>
-                    </div>
+                    <div class="mt-3"><a href="/passbook/{{ user.id }}" target="_blank" class="btn btn-sm btn-outline-primary">Check Digital E-Passbook</a></div>
                 </div>
             </div>
             
@@ -56,7 +48,7 @@
                             <input type="number" name="amount" class="form-control" placeholder="Enter remittance amount" required>
                         </div>
                         <div class="mb-3">
-                            <input type="text" class="form-control form-control-sm" placeholder="Beneficiary Account Number">
+                            <input type="text" name="target_account" class="form-control form-control-sm" placeholder="Beneficiary Account Number" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm w-100">Instant Pay</button>
                     </form>
@@ -68,8 +60,6 @@
             <div class="col-md-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="text-success mb-3">📈 Instant Fixed Deposit (FD) Allocation</h5>
-                    <p class="text-muted small">Procurement of an authorized FD asset scheme requires basic capital liquid liquidity of <b>₹10,000</b> per unit quota.</p>
-                    <hr>
                     <form action="/open-fd" method="POST">
                         <div class="d-flex align-items-center mb-3">
                             <label class="me-3 mb-0">Quantity:</label>
@@ -77,26 +67,15 @@
                         </div>
                         <button type="submit" class="btn btn-success btn-sm">Create New FD Scheme</button>
                     </form>
-                    <div class="mt-3 bg-light p-2 rounded text-center small text-muted">
-                        Total System Corporate FD Quota Left: <b>{{ fd_count }}</b>
-                    </div>
                 </div>
             </div>
-
             <div class="col-md-6">
                 <div class="card shadow-sm p-4">
-                    <h5 class="text-danger mb-3">🔐 Authorized Manager Privilege Panel</h5>
-                    {% if is_admin %}
-                        <div class="alert alert-success shadow-sm">
-                            <b>Welcome Chief Branch Manager!</b> Administrative deserialization context validated successfully.<br>
-                            <span class="badge bg-dark mt-2 p-2 font-monospace">FLAG{A08_INSECURE_COOKIE_DESERIALIZATION_ADMIN}</span>
-                        </div>
-                    {% else %}
-                        <p class="text-muted small">This area is reserved for internal corporate bank managers only. Public customer profiles cannot access this layout.</p>
-                        <div class="p-3 bg-light text-center text-danger border rounded small fw-bold">
-                            🚫 Access Denied: Profile Authentication Verified as Customer
-                        </div>
-                    {% endif %}
+                    <h5 class="text-info mb-3">📄 Personal Loan Services</h5>
+                    <p class="text-muted small">Download your digitally signed active home/car loan documentation forms directly from the cloud repository system.</p>
+                    <div class="bg-light p-3 rounded border text-center">
+                        <a href="/download/loan_101.pdf" target="_blank" class="btn btn-sm btn-info text-white fw-bold">📥 Download My Loan Receipt (.PDF)</a>
+                    </div>
                 </div>
             </div>
         </div>
