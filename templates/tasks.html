@@ -8,6 +8,7 @@
         body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
         .card { background-color: #1e293b; border: 1px solid #334155; color: white; }
         .challenge-title { color: #ff9933; font-weight: bold; }
+        .hint-box { background-color: #1e1b4b; border-left: 4px solid #a855f7; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 13px; color: #e9d5ff; }
     </style>
 </head>
 <body>
@@ -27,104 +28,46 @@
             <div class="col-md-7">
                 <h4 class="mb-3 text-info fw-bold">Security Flaws to Exploit (9 Challenges)</h4>
                 
-                <!-- 1 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">1. NetBanking Auth Bypass (SQL Injection)</span>
-                    <p class="small text-muted mb-2">Bypass the login screen via database manipulation query syntaxes.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="sql_i">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
+                {% set challenges = [
+                    ('sql_i', '1. NetBanking Auth Bypass', 'Bypass the authentication wall without knowing passwords.', 'ലോഗിൻ പേജിൽ യൂസർനെയിമിന്റെ സ്ഥാനത്ത് 1\' OR \'1\'=\'1 എന്ന SQL കമാൻഡ് ഉപയോഗിക്കുക.'),
+                    ('race_cond', '2. Concurrency Capital Extraction', 'Extract more currency balance than listed limits.', 'Burp Suite ഉപയോഗിച്ച് ഒരേ സമയം (Concurrent) ഒന്നിലധികം Quick Transfer റിക്വസ്റ്റുകൾ സെർവറിലേക്ക് അയക്കുക.'),
+                    ('design_stock', '3. Malicious Balance Allocation', 'Manipulate the logic math of Fixed Deposit schemes.', 'ക്വാണ്ടിറ്റിയുടെ സ്ഥാനത്ത് നെഗറ്റീവ് വാല്യൂ (കൃത്യമായി -5) ടൈപ്പ് ചെയ്ത് സബ്മിറ്റ് ചെയ്യുക.'),
+                    ('idor', '4. Third-Party Passbook Harvesting', 'Spy on other user account passbook details.', 'Passbook ഓപ്പൺ ചെയ്ത ശേഷം ബ്രൗസറിന്റെ URL ബാറിലെ യൂസർ ഐഡി നമ്പർ മാറ്റി നോക്കുക.'),
+                    ('file_download', '5. Confidential File Harvesting', 'Fetch restricted corporate ledger data forms.', 'ഡൗൺലോഡ് ലിങ്കിലെ ഫയൽ ഐഡി നമ്പർ മാറ്റി രഹസ്യ ഐഡിയായ 999 എന്ന് നൽകുക.'),
+                    ('crypto_leak', '6. Broken Cryptographic Object Leaks', 'Crack the public infrastructure verification token.', 'ലോഗിൻ പേജിന്റെ ഏറ്റവും താഴെ കാണുന്ന MD5 ഹാഷ് കോപ്പി ചെയ്ത് ഓൺലൈൻ ഡിക്രിപ്റ്റർ വഴി ക്രാക്ക് ചെയ്യുക.'),
+                    ('client_bypass', '7. Client-Side Input Validation Bypass', 'Unlock administrative control remittance button.', 'Inspect Element എടുത്ത് ബട്ടണിലെ \'disabled\' മാറ്റുക, ഒപ്പം വാല്യൂ \'activated_override\' ആക്കുക.'),
+                    ('ssti_leak', '8. Server Context Code Injection', 'Force the python context engine to display keys.', 'പുതിയ അക്കൗണ്ട് ഉണ്ടാക്കുമ്പോൾ പേര് {{user}} എന്ന് നൽകി ഡാഷ്‌ബോർഡ് പരിശോധിക്കുക.'),
+                    ('logic_flaw', '9. Faulty Self-Transaction Policy', 'Exploit routing policies by short-circuiting transfers.', 'Quick Transfer ചെയ്യുമ്പോൾ ഗുണഭോക്താവിന്റെ (Target Account) സ്ഥാനത്ത് നിങ്ങളുടെ സ്വന്തം അക്കൗണ്ട് നമ്പർ നൽകുക.')
+                ] %}
 
-                <!-- 2 -->
+                {% for id, title, desc, hint in challenges %}
                 <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">2. Unlimited IMPS Capital Extraction (Race Condition)</span>
-                    <p class="small text-muted mb-2">Send concurrent money transfer requests via Burp Suite Intruder.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="race_cond">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="challenge-title">{{ title }}</span>
+                        {% if id in opened_hints %}
+                            <span class="badge bg-danger">Penalty Mode: Max 70 Pts</span>
+                        {% else %}
+                            <span class="badge bg-success">Max 100 Pts</span>
+                        {% endif %}
+                    </div>
+                    <p class="small text-muted mb-2">{{ desc }}</p>
+                    
+                    <form action="/submit-flag" method="POST" class="row g-2 mb-2">
+                        <input type="hidden" name="challenge_id" value="{{ id }}">
+                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...} അല്ലെങ്കിൽ രഹസ്യവാക്ക്" required></div>
                         <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
                     </form>
-                </div>
 
-                <!-- 3 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">3. Malicious Balance Allocation (Insecure Design)</span>
-                    <p class="small text-muted mb-2">Type a negative number into the Fixed Deposit allocation form.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="design_stock">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
+                    {% if id in opened_hints %}
+                        <div class="hint-box">💡 <b>Hint:</b> {{ hint }}</div>
+                    {% else %}
+                        <form action="/unlock-hint" method="POST">
+                            <input type="hidden" name="challenge_id" value="{{ id }}">
+                            <button type="submit" class="btn btn-link btn-sm text-info p-0" style="text-decoration: none;" onclick="return confirm('ഈ ഹിന്റ് തുറന്നാൽ ഈ ചലഞ്ചിന് പരമാവധി 70 മാർക്ക് മാത്രമേ ലഭിക്കൂ. ഉറപ്പാണോ?')">🔍 View Hint (-30% Points Penalty)</button>
+                        </form>
+                    {% endif %}
                 </div>
-
-                <!-- 4 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">4. Third-Party Passbook Harvesting (IDOR)</span>
-                    <p class="small text-muted mb-2">Change the account number index inside the E-Passbook URL bar.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="idor">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
-
-                <!-- 5 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">5. Confidential File Harvesting (IDOR File Download)</span>
-                    <p class="small text-muted mb-2">Click the loan receipt download button. Change the receipt number id in the URL parameter to a secret internal asset file like 999.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="file_download">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
-
-                <!-- 6 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">6. Hidden Management Portal Discovery (Forced Browsing)</span>
-                    <p class="small text-muted mb-2">Guess the hidden management link manually by appending /admin-portal to the URL.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="forced_browse">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
-
-                <!-- 7 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">7. Weak Admin Account Guessing (Brute Force)</span>
-                    <p class="small text-muted mb-2">Try logging into the portal using traditional common admin credentials like admin/admin123.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="weak_auth">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
-
-                <!-- 8 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">8. Server Context Code Injection (Template Exploit)</span>
-                    <p class="small text-muted mb-2">Create a new bank account with the username <b>{{user}}</b> and look at the welcome message in the dashboard.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="ssti_leak">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
-
-                <!-- 9 -->
-                <div class="card p-3 mb-3 shadow-sm">
-                    <span class="challenge-title">9. Faulty Self-Transaction Policy (Business Logic Flaw)</span>
-                    <p class="small text-muted mb-2">Try processing an IMPS money transfer where the destination beneficiary account number is your own account number.</p>
-                    <form action="/submit-flag" method="POST" class="row g-2">
-                        <input type="hidden" name="challenge_id" value="logic_flaw">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...}" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-                </div>
+                {% endfor %}
 
             </div>
 
@@ -136,7 +79,7 @@
                         <tbody>
                             {% for u in users %}
                             <tr class="{% if u.id == current_user.id %}table-primary text-dark fw-bold{% endif %}">
-                                <td>{{ loop.index }}</td><td>{{ u.username }}</td><td><span class="badge bg-success">{{ u.score }} / 900 Pts</span></td>
+                                <td>{{ loop.index }}</td><td>{{ u.username }}</td><td><span class="badge bg-success">{{ u.score }} Pts</span></td>
                             </tr>
                             {% endfor %}
                         </tbody>
