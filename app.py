@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# User Schema Model
+# User Schema Model with Hint Tracking State
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -25,6 +25,8 @@ class User(UserMixin, db.Model):
     account_number = db.Column(db.String(20), unique=True, nullable=False)
     balance = db.Column(db.Integer, default=50000) 
     sql_injected_flag = db.Column(db.String(150), default="")
+    hint_viewed = db.Column(db.Boolean, default=False)  # 🛠️ ഹിന്റ് നോക്കിയോ എന്ന് ട്രാക്ക് ചെയ്യാൻ
+    user_ip = db.Column(db.String(50), default="")      # 🛠️ കുട്ടികളുടെ ഐപി സേവ് ചെയ്യാൻ
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -59,11 +61,13 @@ def register():
         hash_val = hashlib.md5(username.encode()).hexdigest()
         acc_num = "999" + str(int(hash_val, 16))[:9]
 
-        new_user = User(username=username, password=password, account_number=acc_num)
+        # കസ്റ്റമറുടെ ഐപി അഡ്രസ് എടുക്കുന്നു
+        client_ip = request.remote_addr
+
+        new_user = User(username=username, password=password, account_number=acc_num, user_ip=client_ip)
         db.session.add(new_user)
         db.session.commit()
         
-        # Success Alert: Green Box + ✔️ Symbol
         flash('success:✔️ Account created successfully! Proceed with login.')
         return redirect(url_for('login'))
     return render_template('register.html')
@@ -95,7 +99,7 @@ def login():
             
     return render_template('login.html')
 
-# 📌 CHALLENGE 5: SERVER-SIDE TEMPLATE INJECTION (SSTI)
+# 📌 DASHBOARD CONTROL & MARKS RENDERING
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -105,13 +109,35 @@ def dashboard():
         return render_template_string(injected_template)
         
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
-    return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
+    
+    # മാർക്ക് കണക്കാക്കുന്ന ലോജിക് (ബേസ് മാർക്ക് 100, ഹിന്റ് നോക്കിയാൽ 30% കുറയും)
+    current_score = 100
+    if current_user.hint_viewed:
+        current_score = 70
 
-# 📌 SEPARATE CHALLENGE MATRIX ROUTE (tasks.html)
+    return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag, score=current_score)
+
+# 📌 SEPARATE CHALLENGE MATRIX ROUTE
 @app.route('/tasks')
 @login_required
 def tasks():
-    return render_template('tasks.html')
+    # ഹിന്റ് നോക്കിയാൽ സ്കോർ കുറയ്ക്കാൻ വേണ്ടി നിലവിലെ യൂസറെ പാസ്സ് ചെയ്യുന്നു
+    return render_template('tasks.html', user=current_user)
+
+# 📌 🛠️ VIEW HINT ENDPOINT (IP BASED DEDUCTION TRIGGER)
+@app.route('/view-hint', methods=['POST'])
+@login_required
+def view_hint():
+    # കുട്ടിയുടെ നിലവിലെ ഐപി മാച്ച് ചെയ്യുന്നുണ്ടോ എന്ന് നോക്കുന്നു
+    current_ip = request.remote_addr
+    current_user.user_ip = current_ip
+    
+    # ഹിന്റ് കണ്ടതായി ഡാറ്റാബേസിൽ മാർക്ക് ചെയ്യുന്നു
+    current_user.hint_viewed = True
+    db.session.commit()
+    
+    flash("danger:⚠️ Hint accessed! 30% marks have been deducted from your challenge metric based on IP audit.")
+    return redirect(url_for('tasks'))
 
 # 📌 CHALLENGES 4, 6 & 8: CLIENT BYPASS, RACE CONDITION & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
