@@ -7,7 +7,7 @@ import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'local-secure-bank-token-2026'
 
-# Database Configuration
+# Database Directory Configuration
 instance_path = os.path.join(app.root_path, 'instance')
 os.makedirs(instance_path, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'indian_bank.db')}"
@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# User Schema
+# User Schema Model
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -45,13 +45,14 @@ with app.app_context():
 def home():
     return redirect(url_for('login'))
 
+# 📌 ONLINE REGISTRATION CONTROLLER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         if User.query.filter_by(username=username).first():
-            flash('Username already exists!')
+            flash('danger:Username already exists!')
             return redirect(url_for('register'))
         
         import hashlib
@@ -61,11 +62,13 @@ def register():
         new_user = User(username=username, password=password, account_number=acc_num)
         db.session.add(new_user)
         db.session.commit()
-        flash('Account created successfully!')
+        
+        # 'success:' prefix captures green status styling on redirect
+        flash('success:✔️ Account created successfully! Proceed with login.')
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# 📌 CHALLENGE 1: SQL INJECTION DETECTION ROUTE
+# 📌 CHALLENGE 1: SQL INJECTION DETECTION ON STUDENT ACCOUNT
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -77,6 +80,7 @@ def login():
 
         user = User.query.filter_by(username=username, password=password).first()
         
+        # Fallback to keep application resilient during raw payloads
         if not user and is_sqli_detected:
             user = User.query.filter_by(username='admin').first()
 
@@ -88,11 +92,11 @@ def login():
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid User ID or Password!')
+            flash('danger:Invalid User ID or Password Profile reference!')
             
     return render_template('login.html')
 
-# 📌 CHALLENGE 8: SSTI DETECTION
+# 📌 CHALLENGE 8: SERVER-SIDE TEMPLATE INJECTION (SSTI)
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -104,7 +108,13 @@ def dashboard():
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
     return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
 
-# 📌 CHALLENGES 2, 7 & 9: RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC
+# 📌 SEPARATE CHALLENGE MATRIX ROUTE
+@app.route('/tasks')
+@login_required
+def tasks():
+    return render_template('tasks.html')
+
+# 📌 CHALLENGES 2, 7 & 9: CONCURRENCY, CLIENT BYPASS & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -113,17 +123,17 @@ def quick_transfer():
     is_vip_route = request.form.get('vip_bypass_token')
 
     if amount == 1337733 and is_vip_route == "activated_override":
-        flash("Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
+        flash("success:Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
         return redirect(url_for('dashboard'))
 
     if amount <= 0:
-        flash('Cannot process invalid transaction amount!')
+        flash('danger:Cannot process negative or zero token transfer allocations!')
         return redirect(url_for('dashboard'))
     
     if target_acc == current_user.account_number:
         current_user.balance += amount  
         db.session.commit()
-        flash(f'Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
+        flash(f'success:Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
         return redirect(url_for('dashboard'))
 
     if current_user.balance >= amount:
@@ -133,14 +143,14 @@ def quick_transfer():
         db.session.commit()
         
         if current_user.balance < 0:
-            flash('Race Condition Successful! FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}')
+            flash('success:Race Condition Successful! FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}')
         else:
-            flash(f'INR {amount} transferred successfully!')
+            flash(f'success:INR {amount} transferred successfully to targeted node!')
     else:
-        flash('Insufficient balance!')
+        flash('danger:Transaction rejected! Insufficient account ledger balance.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 3: INSECURE DESIGN (NEGATIVE QUANTITY MULTIPLIER)
+# 📌 CHALLENGE 3: INSECURE DESIGN (NEGATIVE INTEGRAL ATTRIBUTE MULTIPLIER)
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
@@ -148,12 +158,12 @@ def open_fd():
     if qty == -5:
         current_user.balance = current_user.balance - (qty * 10000)
         db.session.commit()
-        flash('Insecure Design Exploit Success! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
+        flash('success:Insecure Design Exploit Success! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
     else:
-        flash('FD Scheme Created successfully with regular terms.')
+        flash('success:Standard Fixed Deposit Scheme initialized successfully.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 4: IDOR PASSBOOK STATEMENT HARVESTING
+# 📌 CHALLENGE 4: INSECURE DIRECT OBJECT REFERENCE STATEMENT
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
@@ -164,7 +174,7 @@ def passbook(user_id):
         return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook: {target_user.username}</h2><p>Account Number: {target_user.account_number}</p><p>Balance: {target_user.balance}</p></div>"
     return "Not Found", 404
 
-# 📌 CHALLENGE 5: IDOR FILE DOWNLOAD PATH TRAVERSAL
+# 📌 CHALLENGE 5: IDOR FILE DOWNLOAD INSECURE ROUTING
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
