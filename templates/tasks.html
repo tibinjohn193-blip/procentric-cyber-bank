@@ -1,89 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>IDB Cyber Range - Tasks Board</title>
+    <title>Cybersecurity Lab Tasks - 9 Challenges</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
-        .card { background-color: #1e293b; border: 1px solid #334155; color: white; }
-        .challenge-title { color: #ff9933; font-weight: bold; }
-        .hint-box { background-color: #1e1b4b; border-left: 4px solid #a855f7; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 13px; color: #e9d5ff; }
-    </style>
 </head>
-<body>
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <span class="navbar-brand fw-bold text-warning">🎯 IDB Security Vulnerability Lab</span>
-            <a href="/dashboard" class="btn btn-outline-info btn-sm">Return to Banking Profile</a>
+            <a class="navbar-brand" href="/dashboard">⬅️ Back to Customer Dashboard</a>
+            <span class="navbar-text text-white"><b>CTF Challenge Matrix</b></span>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}{% for message in messages %}<div class="alert alert-warning text-center text-dark fw-bold py-2 small">{{ message }}</div>{% endfor %}{% endif %}
-        {% endwith %}
-
-        <div class="row">
-            <div class="col-md-7">
-                <h4 class="mb-3 text-info fw-bold">Security Flaws to Exploit (9 Challenges)</h4>
-                
-                {% set challenges = [
-                    ('sql_i', '1. NetBanking Auth Bypass', 'Bypass the authentication wall without knowing passwords.', 'Inject a standard SQL payload like 1\' OR \'1\'=\'1 into the username field on the login page to bypass security authentication.'),
-                    ('race_cond', '2. Concurrency Capital Extraction', 'Extract more currency balance than listed limits.', 'Use an interception tool like Burp Suite to send multiple concurrent Quick Transfer requests simultaneously to exploit a race condition flaw.'),
-                    ('design_stock', '3. Malicious Balance Allocation', 'Manipulate the logic math of Fixed Deposit schemes.', 'Input a specific negative value (exactly -5) into the quantity field of the Fixed Deposit allocation form to trick the system math into multiplying your funds.'),
-                    ('idor', '4. Third-Party Passbook Harvesting', 'Spy on other user account passbook details.', 'Open your digital E-Passbook, then inspect and alter the numeric User ID parameter directly inside the browser URL address bar to fetch other profiles.'),
-                    ('file_download', '5. Confidential File Harvesting', 'Fetch restricted corporate ledger data forms.', 'Modify the document download link parameter by changing the active file sequence number to the restricted corporate archive ID: 999.'),
-                    ('crypto_leak', '6. Broken Cryptographic Object Leaks', 'Crack the public infrastructure verification token.', 'Inspect the footer of the login landing page, extract the active MD5 hash token signature, and crack it using an online decryption tool to recover the plain text administrative word.'),
-                    ('client_bypass', '7. Client-Side Input Validation Bypass', 'Unlock administrative control remittance button.', 'Right-click on the disabled transfer element, choose \'Inspect\', delete the \'disabled\' HTML attribute to unlock the button interface, and update the hidden bypass token input value to \'activated_override\'.'),
-                    ('ssti_leak', '8. Server Context Code Injection', 'Force the python context engine to display keys.', 'Register a brand-new user profile with the specific username set as {{user}} to trick the server template engine into executing context code dynamically upon profile rendering.'),
-                    ('logic_flaw', '9. Faulty Self-Transaction Policy', 'Exploit routing policies by short-circuiting transfers.', 'Access the Instant IMPS Funds Transfer module and input your own active account number as the target beneficiary index to exploit routing logic validation loops.')
-                ] %}
-
-                {% for id, title, desc, hint in challenges %}
-                <div class="card p-3 mb-3 shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="challenge-title">{{ title }}</span>
-                        {% if id in opened_hints %}
-                            <span class="badge bg-danger">Penalty Mode: Max 70 Pts</span>
-                        {% else %}
-                            <span class="badge bg-success">Max 100 Pts</span>
-                        {% endif %}
-                    </div>
-                    <p class="small text-muted mb-2">{{ desc }}</p>
-                    
-                    <form action="/submit-flag" method="POST" class="row g-2 mb-2">
-                        <input type="hidden" name="challenge_id" value="{{ id }}">
-                        <div class="col-8"><input type="text" name="flag" class="form-control form-control-sm font-monospace" placeholder="FLAG{...} or Secret word" required></div>
-                        <div class="col-4"><button type="submit" class="btn btn-warning btn-sm w-100">Submit</button></div>
-                    </form>
-
-                    {% if id in opened_hints %}
-                        <div class="hint-box">💡 <b>Hint:</b> {{ hint }}</div>
-                    {% else %}
-                        <form action="/unlock-hint" method="POST">
-                            <input type="hidden" name="challenge_id" value="{{ id }}">
-                            <button type="submit" class="btn btn-link btn-sm text-info p-0" style="text-decoration: none;" onclick="return confirm('Viewing this hint will penalize your maximum score to 70 points for this challenge. Are you sure?')">🔍 View Hint (-30% Points Penalty)</button>
-                        </form>
-                    {% endif %}
-                </div>
-                {% endfor %}
-
+    <div class="container mt-5" style="max-width: 900px;">
+        <div class="card shadow mb-5">
+            <div class="card-header bg-warning text-dark text-center">
+                <h3>🎯 Comprehensive Lab Challenges (9 Target Objectives)</h3>
             </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 1: SQL Injection Login Authentication Bypass</h5>
+                        <p class="text-muted">Inject structured SQL payloads into the User ID authentication field during the login execution phase to capture the dynamic access flag rendered on the main dashboard console.</p>
+                    </div>
 
-            <div class="col-md-5">
-                <h4 class="mb-3 text-warning fw-bold">🏆 Leaderboard</h4>
-                <div class="card p-3 shadow text-white">
-                    <table class="table table-dark mb-0">
-                        <thead><tr><th>Rank</th><th>User ID</th><th>Score</th></tr></thead>
-                        <tbody>
-                            {% for u in users %}
-                            <tr class="{% if u.id == current_user.id %}table-primary text-dark fw-bold{% endif %}">
-                                <td>{{ loop.index }}</td><td>{{ u.username }}</td><td><span class="badge bg-success">{{ u.score }} Pts</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 2: Broken Object Level Authorization (IDOR Passbook)</h5>
+                        <p class="text-muted">Manipulate the internal identity integer parameter references inside the statement query string (/passbook/&lt;id&gt;) to capture high-privilege administrative ledger statements containing the flag.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 3: Mass Enumeration Path Sensitive File Download (IDOR Document)</h5>
+                        <p class="text-muted">Fuzz static asset path parameters assigned to public links to intercept and pull protected files (loan_999.pdf) containing confidential security clearance flags.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 4: Client-Side Structural Form Validation Bypass</h5>
+                        <p class="text-muted">Use local application proxy interception methods to modify underlying static post variable parameters during high-value wire transfers to defeat transactional limit bounds.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 5: Server-Side Template Injection (SSTI Runtime Code Execution)</h5>
+                        <p class="text-muted">Pass custom active server template parsing characters into registration context profile names to force backend execution compilers to release system environment configuration flags.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 6: Multi-Threaded Concurrent State Execution (Race Condition)</h5>
+                        <p class="text-muted">Spam multiple concurrent ledger withdrawal streams synchronously within the exact same validation thread gap window to drive balances below base operational parameters.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 7: Insecure Application Design Logic Inversion Error</h5>
+                        <p class="text-muted">Submit inverse mathematical multiplier counts (negative parameters) inside input modules to bypass subtraction algorithms and exponentially add unauthorized assets to your account balance.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 8: Flawed Business Logic Loop Handling (Self-Transfer Manipulation)</h5>
+                        <p class="text-muted">Map your own destination profile nodes directly inside processing payload transfer structures to execute circular transfers that continuously verify and scale balances up.</p>
+                    </div>
+
+                    <div class="list-group-item p-4">
+                        <h5>Challenge 9: Missing Function Level Authorization Access Matrix Controls</h5>
+                        <p class="text-muted">Manually audit system file arrays and predictable application routing directories to open restrictive management nodes without authenticating against higher access group validation keys.</p>
+                    </div>
+
                 </div>
             </div>
         </div>
