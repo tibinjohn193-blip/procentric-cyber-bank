@@ -24,8 +24,6 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150), nullable=False)
     account_number = db.Column(db.String(20), unique=True, nullable=False)
     balance = db.Column(db.Integer, default=50000) 
-    score = db.Column(db.Integer, default=0)
-    solved_challenges = db.Column(db.String(500), default="")
     sql_injected_flag = db.Column(db.String(150), default="")
 
 @login_manager.user_loader
@@ -67,7 +65,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# 📌 SQL INJECTION DETECTION ROUTE
+# 📌 CHALLENGE 1: SQL INJECTION DETECTION ROUTE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -79,7 +77,6 @@ def login():
 
         user = User.query.filter_by(username=username, password=password).first()
         
-        # ബാക്കപ്പ് പ്രൊഫൈൽ എറർ ഒഴിവാക്കാൻ
         if not user and is_sqli_detected:
             user = User.query.filter_by(username='admin').first()
 
@@ -95,7 +92,7 @@ def login():
             
     return render_template('login.html')
 
-# 📌 DASHBOARD & SSTI
+# 📌 CHALLENGE 8: SSTI DETECTION
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -107,7 +104,7 @@ def dashboard():
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
     return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
 
-# 📌 RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC
+# 📌 CHALLENGES 2, 7 & 9: RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -143,35 +140,36 @@ def quick_transfer():
         flash('Insufficient balance!')
     return redirect(url_for('dashboard'))
 
-# 📌 INSECURE DESIGN (NEGATIVE VALUE)
+# 📌 CHALLENGE 3: INSECURE DESIGN (NEGATIVE QUANTITY MULTIPLIER)
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
     qty = int(request.form.get('qty', 1))
     if qty == -5:
-        current_user.balance -= (qty * 10000)
+        current_user.balance = current_user.balance - (qty * 10000)
         db.session.commit()
         flash('Insecure Design Exploit Success! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
-        return redirect(url_for('dashboard'))
+    else:
+        flash('FD Scheme Created successfully with regular terms.')
     return redirect(url_for('dashboard'))
 
-# 📌 IDOR PASSBOOK
+# 📌 CHALLENGE 4: IDOR PASSBOOK STATEMENT HARVESTING
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
     target_user = User.query.get(user_id)
     if target_user:
         if target_user.username == "admin":
-            return f"<h2>E-Passbook: {target_user.username}</h2><p><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p>"
-        return f"<h2>E-Passbook: {target_user.username}</h2>"
+            return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook: {target_user.username}</h2><p style='color:green; font-size:18px;'><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p></div>"
+        return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook: {target_user.username}</h2><p>Account Number: {target_user.account_number}</p><p>Balance: {target_user.balance}</p></div>"
     return "Not Found", 404
 
-# 📌 IDOR FILE DOWNLOAD
+# 📌 CHALLENGE 5: IDOR FILE DOWNLOAD PATH TRAVERSAL
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
     if file_id == 999:
-        return "<h3>⚠️ Confidential Document</h3><p>FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}</p>"
+        return "<div style='font-family:sans-serif; padding:20px;'><h3>⚠️ Confidential Document Saved</h3><p style='color:red; font-size:18px;'>FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}</p></div>"
     return "<h3>Document Not Found</h3>", 404
 
 @app.route('/logout')
