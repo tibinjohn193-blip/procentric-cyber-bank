@@ -1,86 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>IDB NetBanking - Dashboard</title>
+    <title>Customer Dashboard - Cyber Bank</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { background-color: #f8f9fa; font-family: sans-serif; }
-        .bank-header { background: linear-gradient(135deg, #003366, #0055a5); color: white; padding: 25px 0; }
-        .balance-card { background-color: #ffffff; border-left: 5px solid #003366; }
-    </style>
 </head>
-<body>
-    <div class="bank-header shadow-sm">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="mb-0 fw-bold">🏛️ Indian Digital Bank</h2>
-                <h5 class="text-warning my-1">Welcome, {{ user.username }}</h5>
-            </div>
-            <div>
-                <a href="/tasks" class="btn btn-warning fw-bold me-2">🎯 View Lab Challenges</a>
-                <a href="/logout" class="btn btn-outline-light btn-sm">Secure Logout</a>
-            </div>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Procentric Secure Bank Node</a>
+            <span class="navbar-text text-white">Welcome, <b>{{ user.username }}</b></span>
+            <a href="/logout" class="btn btn-outline-danger btn-sm ms-3">Logout</a>
         </div>
-    </div>
+    </nav>
 
     <div class="container mt-4">
-        
-        {% if user.username == 'admin' %}
-        <div class="alert alert-success shadow-sm p-4 mb-4" style="border-left: 5px solid #198754;">
-            <h4 class="alert-heading fw-bold">🎯 SQL Injection Successful!</h4>
-            <p class="mb-0">You successfully bypassed the login screen using authentication manipulation.</p>
-            <hr>
-            <p class="mb-0 fw-bold">FLAG: <code class="bg-white p-2 border rounded text-danger">FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}</code></p>
+        {% if sql_flag %}
+        <div class="alert alert-warning alert-dismissible fade show shadow" role="alert">
+            🚀 <b>SQL Injection Detected!</b> Dynamic Auth Bypass Key Harvested: 
+            <strong class="text-danger">{{ sql_flag }}</strong>
         </div>
         {% endif %}
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card balance-card shadow-sm p-4 h-100">
-                    <span class="text-muted text-uppercase small fw-bold">Available Balance Ledger</span>
-                    <h1 class="display-5 my-2 text-success fw-bold">₹ {{ user.balance }}</h1>
-                    <p class="mb-0 text-muted">Account Number: <b>{{ user.account_number }}</b></p>
-                    <div class="mt-3"><a href="/passbook/1" target="_blank" class="btn btn-sm btn-outline-primary">Check Digital E-Passbook</a></div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card shadow-sm p-4 h-100">
-                    <h5 class="text-primary mb-3">⚡ Instant IMPS Funds Transfer</h5>
-                    <form action="/quick-transfer" method="POST">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">₹</span>
-                            <input type="number" name="amount" class="form-control" placeholder="Enter remittance amount" required>
-                        </div>
-                        <div class="mb-3">
-                            <input type="text" name="target_account" class="form-control form-control-sm" placeholder="Beneficiary Account Number" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm w-100">Instant Pay</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-success shadow">🎉 {{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card shadow-sm p-4 mb-4">
-                    <h5 class="text-success mb-3">📈 Instant Fixed Deposit (FD) Allocation</h5>
-                    <form action="/open-fd" method="POST">
-                        <div class="d-flex align-items-center mb-3">
-                            <label class="me-3 mb-0">Quantity:</label>
-                            <input type="number" name="qty" class="form-control form-control-sm w-25" value="1" required>
-                        </div>
-                        <button type="submit" class="btn btn-success btn-sm">Create New FD Scheme</button>
-                    </form>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white"><h5>Account Summary</h5></div>
+                    <div class="card-body">
+                        <p><b>Account Holder:</b> {{ user.username }}</p>
+                        <p><b>Account Number:</b> {{ user.account_number }}</p>
+                        <h3><b>Balance:</b> INR {{ user.balance }}</h3>
+                    </div>
+                </div>
+                
+                <div class="card shadow">
+                    <div class="card-header bg-secondary text-white"><h5>Open Fixed Deposit</h5></div>
+                    <div class="card-body">
+                        <form action="/open-fd" method="POST">
+                            <label class="form-label">Number of FD Accounts (Multiplier)</label>
+                            <input type="number" name="qty" class="form-control mb-2" value="1">
+                            <button type="submit" class="btn btn-secondary w-100">Create Scheme</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm p-4">
-                    <h5 class="text-info mb-3">📄 Personal Loan Services</h5>
-                    <p class="text-muted small">Download your digitally signed active home/car loan documentation forms directly from the cloud repository system.</p>
-                    <div class="bg-light p-3 rounded border text-center">
-                        <a href="/download/loan_101.pdf" target="_blank" class="btn btn-sm btn-info text-white fw-bold">📥 Download My Loan Receipt (.PDF)</a>
+
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-dark text-white"><h5>Quick Fund Transfer</h5></div>
+                    <div class="card-body">
+                        <form action="/quick-transfer" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Target Account Number</label>
+                                <input type="text" name="target_account" class="form-control" placeholder="Enter 12-digit number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Amount (INR)</label>
+                                <input type="number" name="amount" class="form-control" placeholder="Enter Transfer Amount" required>
+                            </div>
+                            <input type="hidden" name="vip_bypass_token" value="default_user_route">
+                            <button type="submit" class="btn btn-success w-100">Authorize Transaction</button>
+                        </form>
                     </div>
                 </div>
             </div>
