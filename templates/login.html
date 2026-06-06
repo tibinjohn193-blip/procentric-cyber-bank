@@ -12,10 +12,15 @@
                 <small>Retail Internet Banking Portal</small>
             </div>
             <div class="card-body p-4">
+                
                 {% with messages = get_flashed_messages() %}
                   {% if messages %}
                     {% for message in messages %}
-                      <div class="alert alert-danger text-center shadow-sm">⚠️ {{ message }}</div>
+                      {% if 'success:' in message %}
+                        <div class="alert alert-success text-center shadow-sm">{{ message.replace('success:','') }}</div>
+                      {% else %}
+                        <div class="alert alert-danger text-center shadow-sm">{{ message.replace('danger:','') }}</div>
+                      {% endif %}
                     {% endfor %}
                   {% endif %}
                 {% endwith %}
