@@ -15,7 +15,7 @@
         <div class="container d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="mb-0 fw-bold">🏛️ Indian Digital Bank</h2>
-                <h5 class="text-warning my-1">Welcome, {{ welcome_name }}</h5>
+                <h5 class="text-warning my-1">Welcome, {{ user.username }}</h5>
             </div>
             <div>
                 <a href="/tasks" class="btn btn-warning fw-bold me-2">🎯 View Lab Challenges</a>
@@ -25,9 +25,15 @@
     </div>
 
     <div class="container mt-4">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}{% for message in messages %}<div class="alert alert-info text-center shadow-sm py-2 small">{{ message }}</div>{% endfor %}{% endif %}
-        {% endwith %}
+        
+        {% if user.username == 'admin' %}
+        <div class="alert alert-success shadow-sm p-4 mb-4" style="border-left: 5px solid #198754;">
+            <h4 class="alert-heading fw-bold">🎯 SQL Injection Successful!</h4>
+            <p class="mb-0">You successfully bypassed the login screen using authentication manipulation.</p>
+            <hr>
+            <p class="mb-0 fw-bold">FLAG: <code class="bg-white p-2 border rounded text-danger">FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}</code></p>
+        </div>
+        {% endif %}
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">
@@ -35,7 +41,7 @@
                     <span class="text-muted text-uppercase small fw-bold">Available Balance Ledger</span>
                     <h1 class="display-5 my-2 text-success fw-bold">₹ {{ user.balance }}</h1>
                     <p class="mb-0 text-muted">Account Number: <b>{{ user.account_number }}</b></p>
-                    <div class="mt-3"><a href="/passbook/{{ user.id }}" target="_blank" class="btn btn-sm btn-outline-primary">Check Digital E-Passbook</a></div>
+                    <div class="mt-3"><a href="/passbook/1" target="_blank" class="btn btn-sm btn-outline-primary">Check Digital E-Passbook</a></div>
                 </div>
             </div>
             
