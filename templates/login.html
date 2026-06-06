@@ -15,7 +15,7 @@
                 {% with messages = get_flashed_messages() %}
                   {% if messages %}
                     {% for message in messages %}
-                      <div class="alert alert-danger text-center">{{ message }}</div>
+                      <div class="alert alert-danger text-center shadow-sm">⚠️ {{ message }}</div>
                     {% endfor %}
                   {% endif %}
                 {% endwith %}
@@ -23,16 +23,16 @@
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Customer User ID</label>
-                        <input type="text" name="username" class="form-control" placeholder="Enter User ID" required>
+                        <input type="text" name="username" class="form-control" placeholder="Enter User ID or SQL Payload" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control" placeholder="Enter Password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2">Secure Login</button>
+                    <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm">Secure Login</button>
                 </form>
                 <div class="text-center mt-3">
-                    <a href="/register" class="text-decoration-none">Open Account Online</a>
+                    <a href="/register" class="text-decoration-none text-success">New User? Open Account Online</a>
                 </div>
             </div>
         </div>
