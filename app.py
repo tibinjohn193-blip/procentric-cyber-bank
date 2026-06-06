@@ -63,7 +63,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         
-        # 'success:' prefix captures green status styling on redirect
+        # Success Alert: Green Box + ✔️ Symbol
         flash('success:✔️ Account created successfully! Proceed with login.')
         return redirect(url_for('login'))
     return render_template('register.html')
@@ -80,7 +80,6 @@ def login():
 
         user = User.query.filter_by(username=username, password=password).first()
         
-        # Fallback to keep application resilient during raw payloads
         if not user and is_sqli_detected:
             user = User.query.filter_by(username='admin').first()
 
@@ -96,7 +95,7 @@ def login():
             
     return render_template('login.html')
 
-# 📌 CHALLENGE 8: SERVER-SIDE TEMPLATE INJECTION (SSTI)
+# 📌 CHALLENGE 5: SERVER-SIDE TEMPLATE INJECTION (SSTI)
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -108,13 +107,13 @@ def dashboard():
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
     return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
 
-# 📌 SEPARATE CHALLENGE MATRIX ROUTE
+# 📌 SEPARATE CHALLENGE MATRIX ROUTE (tasks.html)
 @app.route('/tasks')
 @login_required
 def tasks():
     return render_template('tasks.html')
 
-# 📌 CHALLENGES 2, 7 & 9: CONCURRENCY, CLIENT BYPASS & BUSINESS LOGIC
+# 📌 CHALLENGES 4, 6 & 8: CLIENT BYPASS, RACE CONDITION & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -150,7 +149,7 @@ def quick_transfer():
         flash('danger:Transaction rejected! Insufficient account ledger balance.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 3: INSECURE DESIGN (NEGATIVE INTEGRAL ATTRIBUTE MULTIPLIER)
+# 📌 CHALLENGE 7: INSECURE DESIGN (NEGATIVE FD SCHEME MULTIPLIER)
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
@@ -163,7 +162,7 @@ def open_fd():
         flash('success:Standard Fixed Deposit Scheme initialized successfully.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 4: INSECURE DIRECT OBJECT REFERENCE STATEMENT
+# 📌 CHALLENGE 2: INSECURE DIRECT OBJECT REFERENCE (IDOR PASSBOOK)
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
@@ -174,7 +173,7 @@ def passbook(user_id):
         return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook: {target_user.username}</h2><p>Account Number: {target_user.account_number}</p><p>Balance: {target_user.balance}</p></div>"
     return "Not Found", 404
 
-# 📌 CHALLENGE 5: IDOR FILE DOWNLOAD INSECURE ROUTING
+# 📌 CHALLENGE 3: IDOR FILE DOWNLOAD INSECURE ROUTING
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
