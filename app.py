@@ -16,8 +16,8 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# 🛠️ FIXED: Removed the broken inline python condition that had invalid parameters
 class User(UserMixin, db.Model):
-    id = db.Column(return_secure=False, primary_key=True) if hasattr(db, 'Column') else db.Column(db.Integer, primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
@@ -95,18 +95,16 @@ def login():
 def dashboard():
     welcome_name = current_user.username
     
-    # Challenge 8: SSTI Check
     if "{{" in welcome_name:
         injected_template = f"<html><body><h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2></body></html>"
         return render_template_string(injected_template)
         
-    # Standard Dynamic Dashboard HTML injection to guarantee Flag visibility
     sql_flag_alert = ""
     if current_user.username == 'admin':
         sql_flag_alert = """
-        <div style="background-color: #d4edda; color: #155724; padding: 20px; margin: 20px 0; border: 1px solid #c3e6cb; border-radius: 5px;">
+        <div style="background-color: #d4edda; color: #155724; padding: 20px; margin: 20px 0; border: 1px solid #c3e6cb; border-radius: 5px; font-weight: bold; border-left: 5px solid #28a745;">
             <h3>🎯 SQL Injection Successful!</h3>
-            <p><strong>FLAG:</strong> <code>FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}</code></p>
+            <p><strong>FLAG:</strong> <span style="font-family: monospace; background: #fff; padding: 4px 8px; border: 1px solid #ced4da;">FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}</span></p>
         </div>
         """
         
