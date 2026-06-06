@@ -19,7 +19,7 @@ login_manager.login_view = 'login'
 
 # User Account Database Architecture
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(App.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     account_number = db.Column(db.String(20), unique=True, nullable=False)
@@ -31,11 +31,11 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Provisions baseline administrator reference record on launch
+# Provisions baseline administrator record on launch
 def create_default_admin():
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
-        new_admin = User(username='admin', password='admin_vault_secure_pass_2026', account_number='999123456789', balance=50000)
+        new_admin = User(username='admin', password='admin_vault_secure_pass_2026', account_number='999123456789', balance=100000)
         db.session.add(new_admin)
         db.session.commit()
 
@@ -68,46 +68,52 @@ def register():
     return render_template('register.html')
 
 
-# 📌 Challenge 1: SQL INJECTION AUTH BYPASS
+# 📌 Challenge 1: FIXED UNIVERSAL SQL INJECTION
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Explicit evaluation window flags common injection keywords and structures safely
+        # Detect if it's an SQL injection attempt
         is_sqli_attempt = any(char in username for char in ["'", '"', "-", "=", "or", "OR"])
-        raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
         
+        raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
         try:
             result = db.session.execute(db.text(raw_query)).first()
-            if result or is_sqli_attempt:
-                user = User.query.get(1) # Automatically authenticates the session as Admin
+            if result:
+                # If a normal user logs in legally, fetch THEIR real ID from the query result
+                user = User.query.get(result[0])
                 login_user(user)
+                return redirect(url_for('dashboard'))
+            elif is_sqli_attempt:
+                # If an SQL injection attack pattern is used, drop them into the Admin profile
+                admin_user = User.query.filter_by(username='admin').first()
+                login_user(admin_user)
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid User ID or Password!')
         except Exception as e:
-            # If complex runtime payloads trigger DB parser issues, reward execution with Admin access
-            user = User.query.get(1)
-            login_user(user)
+            # If query syntax breaks entirely due to complex injection strings, reward with Admin panel
+            admin_user = User.query.filter_by(username='admin').first()
+            login_user(admin_user)
             return redirect(url_for('dashboard'))
             
     return render_template('login.html')
 
 
-# 📌 Challenge 1 (Admin Source Leak) & Challenge 8 (SSTI Hub)
+# 📌 Challenge 1 (Admin Source Code Flag) & Challenge 8 (SSTI Hub)
 @app.route('/dashboard')
 @login_required
 def dashboard():
     welcome_name = current_user.username
     
-    # Challenge 8 Execution Trace
+    # Challenge 8 Execution Trace (SSTI)
     if "{{" in welcome_name:
         injected_template = f"<h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2>"
         return render_template_string(injected_template)
         
-    # Challenge 1 Payload Delivery: Injects the flag strictly within the Admin view source markup.
+    # Strictly display the Admin View Source Panel only if the session is authenticated as 'admin'
     if current_user.username == 'admin':
         admin_dashboard_html = """
         <!DOCTYPE html>
@@ -125,7 +131,7 @@ def dashboard():
                     <div class="card-body text-center">
                         <h5>Welcome back, System Admin!</h5>
                         <p class="mt-3">All application services and relational backend layers are operational.</p>
-                        <p>To audit score progress, review the lab task tracker overview page.</p>
+                        <p>To view individual student flags, please navigate to the Scoreboard tab.</p>
                         <a href="/logout" class="btn btn-danger mt-3">Secure Terminal Logout</a>
                     </div>
                 </div>
@@ -136,6 +142,7 @@ def dashboard():
         """
         return render_template_string(admin_dashboard_html)
 
+    # Normal users like 'tib' will load their standard dashboard and scoreboard view smoothly!
     return render_template('scoreboard.html', user=current_user, sql_flag="")
 
 
@@ -147,7 +154,6 @@ def quick_transfer():
     target_acc = request.form.get('target_account', '').strip()
     is_vip_route = request.form.get('vip_bypass_token')
 
-    # Challenge 7 Check
     if amount == 1337733 and is_vip_route == "activated_override":
         flash("Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
         return redirect(url_for('dashboard'))
@@ -156,14 +162,12 @@ def quick_transfer():
         flash('Cannot process invalid transaction amount!')
         return redirect(url_for('dashboard'))
     
-    # Challenge 9 Check
     if target_acc == current_user.account_number:
         current_user.balance += amount  
         db.session.commit()
         flash(f'Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
         return redirect(url_for('dashboard'))
 
-    # Challenge 2 Check
     if current_user.balance >= amount:
         current_balance = current_user.balance
         time.sleep(0.5)
