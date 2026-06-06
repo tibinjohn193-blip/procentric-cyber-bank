@@ -17,7 +17,11 @@
         {% with messages = get_flashed_messages() %}
           {% if messages %}
             {% for message in messages %}
-              <div class="alert alert-danger text-center shadow mb-4 fw-bold"> {{ message.replace('danger:','') }} </div>
+              {% if 'success:' in message %}
+                <div class="alert alert-success text-center shadow mb-4 fw-bold"> 🎉 {{ message.replace('success:','') }} </div>
+              {% else %}
+                <div class="alert alert-danger text-center shadow mb-4 fw-bold"> ⚠️ {{ message.replace('danger:','') }} </div>
+              {% endif %}
             {% endfor %}
           {% endif %}
         {% endwith %}
@@ -29,78 +33,45 @@
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
                     
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 1: SQL Injection Login Authentication Bypass</h5>
-                        <p class="text-muted">Inject structured SQL payloads into the User ID field during login to capture the hidden authorization token flag on the dashboard panel.</p>
+                    {% set tasks_data = [
+                        {"id": "1", "title": "Challenge 1: SQL Injection Login Authentication Bypass", "desc": "Inject structured SQL payloads into the User ID field during login to capture the hidden authorization token flag on the dashboard panel.", "hint": "Try passing basic authentication query bypass strings like student1' OR 1=1 -- into the User ID field."},
+                        {"id": "2", "title": "Challenge 2: Broken Object Level Authorization (IDOR Passbook)", "desc": "Manipulate the internal identity integer parameter references inside the statement query string (/passbook/<id>) to capture high-privilege administrative ledger statements.", "hint": "Change the numeric database index parameter in the statement URL handle targeting user index number 1."},
+                        {"id": "3", "title": "Challenge 3: Mass Enumeration Path Sensitive File Download (IDOR Document)", "desc": "Fuzz static asset path parameters assigned to public links to intercept and pull protected files containing confidential flags.", "hint": "Intercept file parameters and fuzz file number references inside the path up to structural limit 999."},
+                        {"id": "4", "title": "Challenge 4: Client-Side Structural Form Validation Bypass", "desc": "Use local application proxy interception methods to modify underlying static post variable parameters during high-value wire transfers.", "hint": "Force transfer request fields via local proxy tools changing amount threshold to 1337733 and token routing to activated_override."},
+                        {"id": "5", "title": "Challenge 5: Server-Side Template Injection (SSTI Runtime Code Execution)", "desc": "Pass custom active server template parsing characters into registration context profile names to force backend execution compilers to release system environment configuration flags.", "hint": "Test Jinja rendering injection scripts like syntax matrices {{ 7*7 }} directly inside username parameters."},
+                        {"id": "6", "title": "Challenge 6: Multi-Threaded Concurrent State Execution (Race Condition)", "desc": "Spam multiple concurrent ledger withdrawal streams synchronously within the exact same validation thread gap window to drive balances below base operational parameters.", "hint": "Fire high-concurrency multi-threaded transfer vectors using proxy automation extensions like Turbo Intruder."},
+                        {"id": "7", "title": "Challenge 7: Insecure Application Design Logic Inversion Error", "desc": "Submit inverse mathematical multiplier counts (negative parameters) inside input modules to bypass subtraction algorithms and exponentially add unauthorized assets to your account balance.", "hint": "Post a reverse mathematical attribute (negative index block like -5) directly into Fixed Deposit multiplier fields."},
+                        {"id": "8", "title": "Challenge 8: Flawed Business Logic Loop Handling (Self-Transfer Manipulation)", "desc": "Map your own destination profile nodes directly inside processing payload transfer structures to execute circular transfers that continuously verify and scale balances up.", "hint": "Try passing your own profile savings account identification matrix code directly inside the target transfer input fields."},
+                        {"id": "9", "title": "Challenge 9: Missing Function Level Authorization Access Matrix Controls", "desc": "Manually audit system file arrays and predictable application routing directories to open restrictive management nodes.", "hint": "Analyze basic development frameworks and trace static hidden configuration blueprints left active in staging."}
+                    ] %}
+
+                    {% for task in tasks_data %}
+                    <div class="list-group-item p-4 {% if task.id in solved_list %}bg-light-success{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5>{{ task.title }}</h5>
+                            {% if task.id in solved_list %}
+                                <span class="badge bg-success py-2 px-3">✔️ Solved & Verified</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mt-1">{{ task.desc }}</p>
                         
                         {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Try passing basic authentication query bypass strings like <code>student1' OR 1=1 --</code> into the User ID field.</div>
+                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> <code>{{ task.hint }}</code></div>
                         {% endif %}
-                    </div>
 
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 2: Broken Object Level Authorization (IDOR Passbook)</h5>
-                        <p class="text-muted">Manipulate the internal identity integer parameter references inside the statement query string (/passbook/&lt;id&gt;) to capture high-privilege administrative ledger statements.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Change the numeric database index parameter in the statement URL handle targeting user index number <code>1</code>.</div>
+                        {% if task.id not in solved_list %}
+                        <form action="/submit-flag" method="POST" class="row g-2 mt-2 align-items-center">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <div class="col-sm-8">
+                                <input type="text" name="flag" class="form-control form-control-sm" placeholder="Paste captured FLAG{...} format key here" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <button type="submit" class="btn btn-sm btn-dark w-100 fw-bold">🚀 Submit Flag</button>
+                            </div>
+                        </form>
                         {% endif %}
                     </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 3: Mass Enumeration Path Sensitive File Download (IDOR Document)</h5>
-                        <p class="text-muted">Fuzz static asset path parameters assigned to public links to intercept and pull protected files containing confidential flags.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Intercept file parameters and fuzz file number references inside the path up to structural limit <code>999</code>.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 4: Client-Side Structural Form Validation Bypass</h5>
-                        <p class="text-muted">Use local application proxy interception methods to modify underlying static post variable parameters during high-value wire transfers.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Force transfer request fields via local proxy tools changing amount threshold to <code>1337733</code> and token routing to <code>activated_override</code>.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 5: Server-Side Template Injection (SSTI Runtime Code Execution)</h5>
-                        <p class="text-muted">Pass custom active server template parsing characters into registration context profile names to force backend execution compilers to release system environment configuration flags.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Test Jinja rendering injection scripts like syntax matrices <code>{{ 7*7 }}</code> directly inside username parameters.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 6: Multi-Threaded Concurrent State Execution (Race Condition)</h5>
-                        <p class="text-muted">Spam multiple concurrent ledger withdrawal streams synchronously within the exact same validation thread gap window to drive balances below base operational parameters.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Fire high-concurrency multi-threaded transfer vectors using proxy automation extensions like Turbo Intruder.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 7: Insecure Application Design Logic Inversion Error</h5>
-                        <p class="text-muted">Submit inverse mathematical multiplier counts (negative parameters) inside input modules to bypass subtraction algorithms and exponentially add unauthorized assets to your account balance.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Post a reverse mathematical attribute (negative index block like <code>-5</code>) directly into Fixed Deposit multiplier fields.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 8: Flawed Business Logic Loop Handling (Self-Transfer Manipulation)</h5>
-                        <p class="text-muted">Map your own destination profile nodes directly inside processing payload transfer structures to execute circular transfers that continuously verify and scale balances up.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Try passing your own profile savings account identification matrix code directly inside the target transfer input fields.</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="list-group-item p-4">
-                        <h5>Challenge 9: Missing Function Level Authorization Access Matrix Controls</h5>
-                        <p class="text-muted">Manually audit system file arrays and predictable application routing directories to open restrictive management nodes.</p>
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> Analyze basic development frameworks and trace static hidden configuration blueprints left active in staging.</div>
-                        {% endif %}
-                    </div>
+                    {% endfor %}
 
                 </div>
             </div>
@@ -116,4 +87,7 @@
         </div>
     </div>
 </body>
+<style>
+    .bg-light-success { background-color: #e8f5e9 !important; border-left: 5px solid #2e7d32; }
+</style>
 </html>
