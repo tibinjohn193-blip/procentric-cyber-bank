@@ -16,7 +16,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Clean database model definition to prevent deployment crashes
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -33,7 +32,6 @@ def load_user(user_id):
 def create_default_admin():
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
-        # Sets up the target administrator account parameters matching your balance output
         new_admin = User(username='admin', password='admin_vault_secure_pass_2026', account_number='999123456789', balance=9999999)
         db.session.add(new_admin)
         db.session.commit()
@@ -65,7 +63,6 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# 📌 Challenge 1: SQL INJECTION ROUTE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -73,8 +70,8 @@ def login():
         password = request.form.get('password')
         
         is_sqli_pattern = any(trigger in username for trigger in ["', '"', "-", "=", "or", "OR", "admin"])
-        
         raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
+        
         try:
             result = db.session.execute(db.text(raw_query)).first()
             if result or is_sqli_pattern:
@@ -92,21 +89,17 @@ def login():
             
     return render_template('login.html')
 
-# 📌 Challenge 8 & Core Dashboard Output (LINKED TO SCOREBOARD.HTML)
 @app.route('/dashboard')
 @login_required
 def dashboard():
     welcome_name = current_user.username
-    
-    # Challenge 8: SSTI Check
     if "{{" in welcome_name:
         injected_template = f"<html><body><h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2></body></html>"
         return render_template_string(injected_template)
         
-    # RENDERS YOUR PHYSICALLY SAVED SCOREBOARD.HTML FILE PASSED WITH USER VARIABLE
-    return render_template('scoreboard.html', user=current_user)
+    # Points cleanly to dashboard.html inside the templates folder
+    return render_template('dashboard.html', user=current_user)
 
-# 📌 Challenges 2, 7 & 9: RACE CONDITION & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -135,7 +128,6 @@ def quick_transfer():
             return f"<h3>Race Condition Successful! FLAG{{A04_CONCURRENCY_BALANCE_EXPLOIT}}</h3><a href='/dashboard'>Back</a>"
     return redirect(url_for('dashboard'))
 
-# 📌 Challenge 3: Insecure Design Math
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
@@ -146,7 +138,6 @@ def open_fd():
         return f"<h3>Insecure Design Exploit Success! FLAG{{A05_INSECURE_DESIGN_NEGATIVE_VALUE}}</h3>"
     return redirect(url_for('dashboard'))
 
-# 📌 Challenge 4: IDOR Passbook
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
@@ -155,7 +146,6 @@ def passbook(user_id):
         return f"<h2>E-Passbook: {target_user.username}</h2><p><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p>"
     return "Authorized Ledger Access Only", 403
 
-# 📌 Challenge 5: IDOR Download
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
