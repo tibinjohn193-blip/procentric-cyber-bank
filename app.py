@@ -3,11 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import time
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'local-secure-bank-token-2026'
 
-# Database Directory Configuration
+# Database Setup
 instance_path = os.path.join(app.root_path, 'instance')
 os.makedirs(instance_path, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'indian_bank.db')}"
@@ -17,7 +18,20 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# User Schema Model with Hint Tracking State
+# 9 Challenges - Exact Flag Mapping
+VERIFIED_FLAGS = {
+    "1": "FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}",
+    "2": "FLAG{A01_BROKEN_OBJECT_LEVEL_STATEMENT}",
+    "3": "FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}",
+    "4": "FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}",
+    "5": "FLAG{A03_SERVER_SIDE_TEMPLATE_INJECTION}",
+    "6": "FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}",
+    "7": "FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}",
+    "8": "FLAG{A05_BUSINESS_LOGIC_SELF_TRANSFER}",
+    "9": "FLAG{A05_MISSING_ACCESS_CONTROL_ROUTING}"
+}
+
+# User Model with Solved Challenges Tracking
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -25,8 +39,23 @@ class User(UserMixin, db.Model):
     account_number = db.Column(db.String(20), unique=True, nullable=False)
     balance = db.Column(db.Integer, default=50000) 
     sql_injected_flag = db.Column(db.String(150), default="")
-    hint_viewed = db.Column(db.Boolean, default=False)  # 🛠️ ഹിന്റ് നോക്കിയോ എന്ന് ട്രാക്ക് ചെയ്യാൻ
-    user_ip = db.Column(db.String(50), default="")      # 🛠️ കുട്ടികളുടെ ഐപി സേവ് ചെയ്യാൻ
+    hint_viewed = db.Column(db.Boolean, default=False)
+    user_ip = db.Column(db.String(50), default="")
+    solved_challenges = db.Column(db.String(300), default="[]") # Saved as JSON Array string
+
+    def get_solved_list(self):
+        try:
+            return json.loads(self.solved_challenges)
+        except:
+            return []
+
+    def solve_challenge(self, chal_id):
+        solved = self.get_solved_list()
+        if chal_id not in solved:
+            solved.append(chal_id)
+            self.solved_challenges = json.dumps(solved)
+            return True
+        return False
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -47,7 +76,7 @@ with app.app_context():
 def home():
     return redirect(url_for('login'))
 
-# 📌 ONLINE REGISTRATION CONTROLLER
+# 📌 REGISTER ROUTE
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -60,8 +89,6 @@ def register():
         import hashlib
         hash_val = hashlib.md5(username.encode()).hexdigest()
         acc_num = "999" + str(int(hash_val, 16))[:9]
-
-        # കസ്റ്റമറുടെ ഐപി അഡ്രസ് എടുക്കുന്നു
         client_ip = request.remote_addr
 
         new_user = User(username=username, password=password, account_number=acc_num, user_ip=client_ip)
@@ -72,7 +99,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# 📌 CHALLENGE 1: SQL INJECTION DETECTION ON STUDENT ACCOUNT
+# 📌 LOGIN ROUTE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -99,7 +126,7 @@ def login():
             
     return render_template('login.html')
 
-# 📌 DASHBOARD CONTROL & MARKS RENDERING
+# 📌 DASHBOARD SCORE CALCULATOR
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -110,36 +137,52 @@ def dashboard():
         
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
     
-    # മാർക്ക് കണക്കാക്കുന്ന ലോജിക് (ബേസ് മാർക്ക് 100, ഹിന്റ് നോക്കിയാൽ 30% കുറയും)
-    current_score = 100
+    solved_count = len(current_user.get_solved_list())
+    base_score = solved_count * 10
+    
+    # Apply 30% penalty if hint is viewed
     if current_user.hint_viewed:
-        current_score = 70
+        base_score = int(base_score * 0.7)
 
-    return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag, score=current_score)
+    return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag, score=base_score, solved_count=solved_count)
 
-# 📌 SEPARATE CHALLENGE MATRIX ROUTE
+# 📌 VIEW CHALLENGES ROUTE
 @app.route('/tasks')
 @login_required
 def tasks():
-    # ഹിന്റ് നോക്കിയാൽ സ്കോർ കുറയ്ക്കാൻ വേണ്ടി നിലവിലെ യൂസറെ പാസ്സ് ചെയ്യുന്നു
-    return render_template('tasks.html', user=current_user)
+    return render_template('tasks.html', user=current_user, solved_list=current_user.get_solved_list())
 
-# 📌 🛠️ VIEW HINT ENDPOINT (IP BASED DEDUCTION TRIGGER)
+# 📌 FLAG VERIFICATION ENGINE
+@app.route('/submit-flag', methods=['POST'])
+@login_required
+def submit_flag():
+    task_id = request.form.get('task_id')
+    submitted_flag = request.form.get('flag', '').strip()
+    
+    correct_flag = VERIFIED_FLAGS.get(task_id)
+    
+    if correct_flag and submitted_flag == correct_flag:
+        if current_user.solve_challenge(task_id):
+            db.session.commit()
+            flash(f"success:Success! Challenge {task_id} Exploit Verified. Points updated.")
+        else:
+            flash(f"success:Challenge {task_id} is already solved.")
+    else:
+        flash(f"danger:Incorrect Flag format submitted for Challenge {task_id}! Please check again.")
+        
+    return redirect(url_for('tasks'))
+
+# 📌 GLOBAL HINT TRIGGER
 @app.route('/view-hint', methods=['POST'])
 @login_required
 def view_hint():
-    # കുട്ടിയുടെ നിലവിലെ ഐപി മാച്ച് ചെയ്യുന്നുണ്ടോ എന്ന് നോക്കുന്നു
-    current_ip = request.remote_addr
-    current_user.user_ip = current_ip
-    
-    # ഹിന്റ് കണ്ടതായി ഡാറ്റാബേസിൽ മാർക്ക് ചെയ്യുന്നു
+    current_user.user_ip = request.remote_addr
     current_user.hint_viewed = True
     db.session.commit()
-    
-    flash("danger:⚠️ Hint accessed! 30% marks have been deducted from your challenge metric based on IP audit.")
+    flash("danger:⚠️ Hints unlocked! A 30% penalty reduction has been applied to your final score structure.")
     return redirect(url_for('tasks'))
 
-# 📌 CHALLENGES 4, 6 & 8: CLIENT BYPASS, RACE CONDITION & BUSINESS LOGIC
+# 📌 QUICK FUND TRANSFER
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -175,7 +218,7 @@ def quick_transfer():
         flash('danger:Transaction rejected! Insufficient account ledger balance.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 7: INSECURE DESIGN (NEGATIVE FD SCHEME MULTIPLIER)
+# 📌 FIXED DEPOSIT SCHEME LOGIC FIX
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
@@ -188,7 +231,7 @@ def open_fd():
         flash('success:Standard Fixed Deposit Scheme initialized successfully.')
     return redirect(url_for('dashboard'))
 
-# 📌 CHALLENGE 2: INSECURE DIRECT OBJECT REFERENCE (IDOR PASSBOOK)
+# 📌 IDOR PASSBOOK STATEMENT
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
@@ -199,7 +242,7 @@ def passbook(user_id):
         return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook: {target_user.username}</h2><p>Account Number: {target_user.account_number}</p><p>Balance: {target_user.balance}</p></div>"
     return "Not Found", 404
 
-# 📌 CHALLENGE 3: IDOR FILE DOWNLOAD INSECURE ROUTING
+# 📌 IDOR FILE DOWNLOAD ROUTE
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
