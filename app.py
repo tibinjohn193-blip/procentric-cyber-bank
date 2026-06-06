@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
@@ -7,7 +7,6 @@ import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'local-secure-bank-token-2026'
 
-# Establish absolute paths to handle internal Docker persistence flawlessly
 instance_path = os.path.join(app.root_path, 'instance')
 os.makedirs(instance_path, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'indian_bank.db')}"
@@ -17,8 +16,8 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Base User Schema Tracking Scores and Challenge Completions
 class User(UserMixin, db.Model):
+    id = db.Column(return_secure=False, primary_key=True) if hasattr(db, 'Column') else db.Column(db.Integer, primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
@@ -31,7 +30,6 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Hardcodes the primary target admin persona upon the application baseline spin-up
 def create_default_admin():
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
@@ -63,63 +61,83 @@ def register():
         new_user = User(username=username, password=password, account_number=acc_num)
         db.session.add(new_user)
         db.session.commit()
-        flash('Account created successfully!')
         return redirect(url_for('login'))
     return render_template('register.html')
 
-
-# 📌 Challenge 1: SOLVED SQL INJECTION (Challenge: sql_i)
-# This raw query route explicitly identifies malicious logic patterns and intercepts 
-# database syntax anomalies to guarantee an administrative session mapping.
+# 📌 Challenge 1: SQL INJECTION ROUTE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Comprehensive evaluation tracking common input mutation strings
-        is_sqli_pattern = any(trigger in username for trigger in ["'", '"', "-", "=", "or", "OR", "admin"])
+        is_sqli_pattern = any(trigger in username for trigger in ["', '"', "-", "=", "or", "OR", "admin"])
         
         raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
         try:
             result = db.session.execute(db.text(raw_query)).first()
             if result or is_sqli_pattern:
-                # Force-fetch and register the true admin record to output the dashboard flag
                 admin_account = User.query.filter_by(username='admin').first()
                 login_user(admin_account)
                 return redirect(url_for('dashboard'))
             else:
-                flash('Invalid User ID or Password!')
-        except Exception as database_syntax_error:
-            # Fallback block handles broken quotes directly by passing administrative privileges
+                flash('Invalid Credentials')
+        except Exception as e:
             admin_account = User.query.filter_by(username='admin').first()
             login_user(admin_account)
             return redirect(url_for('dashboard'))
             
     return render_template('login.html')
 
-
-# 📌 Challenge 8: SERVER-SIDE TEMPLATE INJECTION (SSTI) & DASHBOARD
+# 📌 Challenge 8 & Core Dashboard Output (FORCED HTML RENDER)
 @app.route('/dashboard')
 @login_required
 def dashboard():
     welcome_name = current_user.username
     
-    # Challenge 8: Triggered if registration identity carries template delimiters
+    # Challenge 8: SSTI Check
     if "{{" in welcome_name:
-        from flask import render_template_string
-        injected_template = f"<h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2>"
+        injected_template = f"<html><body><h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2></body></html>"
         return render_template_string(injected_template)
         
-    # Appends the core administrative challenge flag dynamically upon verification
-    sql_flag = ""
+    # Standard Dynamic Dashboard HTML injection to guarantee Flag visibility
+    sql_flag_alert = ""
     if current_user.username == 'admin':
-        sql_flag = "FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}"
+        sql_flag_alert = """
+        <div style="background-color: #d4edda; color: #155724; padding: 20px; margin: 20px 0; border: 1px solid #c3e6cb; border-radius: 5px;">
+            <h3>🎯 SQL Injection Successful!</h3>
+            <p><strong>FLAG:</strong> <code>FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}</code></p>
+        </div>
+        """
         
-    return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
+    dashboard_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><title>NetBanking Dashboard</title></head>
+    <body style="font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9;">
+        <h2>ProCentric Cyber Bank Dashboard</h2>
+        <p><strong>Logged in as:</strong> {current_user.username}</p>
+        <p><strong>Account Number:</strong> {current_user.account_number}</p>
+        <p><strong>Available Balance:</strong> INR {current_user.balance}</p>
+        
+        {sql_flag_alert}
 
+        <hr>
+        <h3>Quick Fund Transfer (Race Condition Lab)</h3>
+        <form action="/quick-transfer" method="POST">
+            Target Account: <input type="text" name="target_account"><br><br>
+            Amount (INR): <input type="number" name="amount"><br><br>
+            <input type="submit" value="Transfer Funds">
+        </form>
+        <br>
+        <hr>
+        <p><a href="/logout">Secure Logout</a></p>
+    </body>
+    </html>
+    """
+    return render_template_string(dashboard_html)
 
-# 📌 Challenges 2, 7 & 9: RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC LOOP
+# 📌 Challenges 2, 7 & 9: RACE CONDITION & BUSINESS LOGIC
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -127,71 +145,54 @@ def quick_transfer():
     target_acc = request.form.get('target_account', '').strip()
     is_vip_route = request.form.get('vip_bypass_token')
 
-    # Challenge 7: Frontend Parameter Overwrite
     if amount == 1337733 and is_vip_route == "activated_override":
-        flash("Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
-        return redirect(url_for('dashboard'))
+        return "<h3>Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}</h3>"
 
     if amount <= 0:
-        flash('Cannot process invalid transaction amount!')
         return redirect(url_for('dashboard'))
     
-    # Challenge 9: Internal Balance Destination Reflection Error
     if target_acc == current_user.account_number:
         current_user.balance += amount  
         db.session.commit()
-        flash(f'Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
-        return redirect(url_for('dashboard'))
+        return f"<h3>Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}</h3><a href='/dashboard'>Back</a>"
 
-    # Challenge 2: Asynchronous Race State Manipulation
     if current_user.balance >= amount:
         current_balance = current_user.balance
-        time.sleep(0.5)  # Latency threshold to align concurrent threads
+        time.sleep(0.5) 
         current_user.balance = current_balance - amount
         db.session.commit()
         
         if current_user.balance < 0:
-            flash('Race Condition Successful! FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}')
-        else:
-            flash(f'INR {amount} transferred successfully!')
-    else:
-        flash('Insufficient balance!')
+            return f"<h3>Race Condition Successful! FLAG{{A04_CONCURRENCY_BALANCE_EXPLOIT}}</h3><a href='/dashboard'>Back</a>"
     return redirect(url_for('dashboard'))
 
-
-# 📌 Challenge 3: Insecure Design Math (Integer Underflow via Negatives)
+# 📌 Challenge 3: Insecure Design Math
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
     qty = int(request.form.get('qty', 1))
     if qty == -5:
-        current_user.balance -= (qty * 10000) # Deduction converts to addition
+        current_user.balance -= (qty * 10000)
         db.session.commit()
-        flash('Insecure Design Exploit Success! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
-        return redirect(url_for('dashboard'))
+        return f"<h3>Insecure Design Exploit Success! FLAG{{A05_INSECURE_DESIGN_NEGATIVE_VALUE}}</h3>"
     return redirect(url_for('dashboard'))
 
-
-# 📌 Challenge 4: IDOR (Passbook Statement Arbitrary Access)
+# 📌 Challenge 4: IDOR Passbook
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
     target_user = User.query.get(user_id)
-    if target_user:
-        if target_user.username == "admin":
-            return f"<h2>E-Passbook: {target_user.username}</h2><p><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p>"
-        return f"<h2>E-Passbook: {target_user.username}</h2>"
-    return "Not Found", 404
+    if target_user and target_user.username == "admin":
+        return f"<h2>E-Passbook: {target_user.username}</h2><p><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p>"
+    return "Authorized Ledger Access Only", 403
 
-
-# 📌 Challenge 5: IDOR (Confidential File Directory Direct Traversals)
+# 📌 Challenge 5: IDOR Download
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
     if file_id == 999:
         return "<h3>⚠️ Confidential Document</h3><p>FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}</p>"
-    return "<h3>Document Not Found</h3>", 404
-
+    return "Document Not Found", 404
 
 @app.route('/logout')
 @login_required
