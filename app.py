@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, render_template_string
+from flask import Flask, render_template, request, redirect, url_for, flash, render_template_string, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
@@ -16,7 +16,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# 🛠️ FIXED: Removed the broken inline python condition that had invalid parameters
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -71,18 +70,25 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        is_sqli_pattern = any(trigger in username for trigger in ["', '"', "-", "=", "or", "OR", "admin"])
+        # Check for typical SQL injection characters
+        is_sqli_pattern = any(trigger in username for trigger in ["'", '"', "-", "=", "or", "OR", "admin"])
         
         raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
         try:
             result = db.session.execute(db.text(raw_query)).first()
             if result or is_sqli_pattern:
+                # 🛠️ OVERRIDE: Tell the app session that this was an SQL Injection bypass
+                session['sqli_exploited'] = True
+                
                 admin_account = User.query.filter_by(username='admin').first()
+                if not admin_account:
+                    admin_account = User.query.get(1)
                 login_user(admin_account)
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid Credentials')
         except Exception as e:
+            session['sqli_exploited'] = True
             admin_account = User.query.filter_by(username='admin').first()
             login_user(admin_account)
             return redirect(url_for('dashboard'))
@@ -99,8 +105,9 @@ def dashboard():
         injected_template = f"<html><body><h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2></body></html>"
         return render_template_string(injected_template)
         
+    # 🛠️ OVERRIDE CHECK: If session flag is True OR user is admin, SHOW THE FLAG.
     sql_flag_alert = ""
-    if current_user.username == 'admin':
+    if current_user.username == 'admin' or session.get('sqli_exploited') == True:
         sql_flag_alert = """
         <div style="background-color: #d4edda; color: #155724; padding: 20px; margin: 20px 0; border: 1px solid #c3e6cb; border-radius: 5px; font-weight: bold; border-left: 5px solid #28a745;">
             <h3>🎯 SQL Injection Successful!</h3>
@@ -195,6 +202,7 @@ def download_loan(file_id):
 @app.route('/logout')
 @login_required
 def logout():
+    session.pop('sqli_exploited', None) # Clear out the exploit session state
     logout_user()
     return redirect(url_for('login'))
 
