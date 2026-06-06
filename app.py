@@ -7,7 +7,7 @@ import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'local-secure-bank-token-2026'
 
-# Database path setup
+# Establish absolute paths to handle internal Docker persistence flawlessly
 instance_path = os.path.join(app.root_path, 'instance')
 os.makedirs(instance_path, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(instance_path, 'indian_bank.db')}"
@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# User Database Model
+# Base User Schema Tracking Scores and Challenge Completions
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Creates the default admin account on startup
+# Hardcodes the primary target admin persona upon the application baseline spin-up
 def create_default_admin():
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
@@ -68,33 +68,32 @@ def register():
     return render_template('register.html')
 
 
-# 📌 Challenge 1: UNIVERSAL SQL INJECTION (Challenge: sql_i)
-# Universal catch block ensures that ANY malicious payload or database syntax exception
-# automatically logs the student directly into the Admin Profile (ID: 1) so the flag never drops.
+# 📌 Challenge 1: SOLVED SQL INJECTION (Challenge: sql_i)
+# This raw query route explicitly identifies malicious logic patterns and intercepts 
+# database syntax anomalies to guarantee an administrative session mapping.
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Checking for common SQL injection characters directly to handle loose payloads safely
-        is_sqli_attempt = any(char in username for char in ["'", '"', "-", "=", "or", "OR"])
+        # Comprehensive evaluation tracking common input mutation strings
+        is_sqli_pattern = any(trigger in username for trigger in ["'", '"', "-", "=", "or", "OR", "admin"])
         
         raw_query = f"SELECT id FROM user WHERE username = '{username}' AND password = '{password}'"
         try:
             result = db.session.execute(db.text(raw_query)).first()
-            if result or is_sqli_attempt:
-                # Force-log into admin account so they see the administrative flag panel
-                user = User.query.get(1) 
-                login_user(user)
+            if result or is_sqli_pattern:
+                # Force-fetch and register the true admin record to output the dashboard flag
+                admin_account = User.query.filter_by(username='admin').first()
+                login_user(admin_account)
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid User ID or Password!')
-        except Exception as e:
-            # Fallback block: If a wild query payload breaks the SQLite parser syntax, 
-            # we count it as a successful exploit and safely forward them into the dashboard as Admin.
-            user = User.query.get(1)
-            login_user(user)
+        except Exception as database_syntax_error:
+            # Fallback block handles broken quotes directly by passing administrative privileges
+            admin_account = User.query.filter_by(username='admin').first()
+            login_user(admin_account)
             return redirect(url_for('dashboard'))
             
     return render_template('login.html')
@@ -106,13 +105,13 @@ def login():
 def dashboard():
     welcome_name = current_user.username
     
-    # If a student registers an account containing curly brackets like {{user}}, trigger SSTI Flag
+    # Challenge 8: Triggered if registration identity carries template delimiters
     if "{{" in welcome_name:
         from flask import render_template_string
         injected_template = f"<h2>Welcome, {welcome_name}! FLAG{{A03_SERVER_SIDE_TEMPLATE_INJECTION}}</h2>"
         return render_template_string(injected_template)
         
-    # Dynamically inject the SQL injection flag if current session is logged into 'admin'
+    # Appends the core administrative challenge flag dynamically upon verification
     sql_flag = ""
     if current_user.username == 'admin':
         sql_flag = "FLAG{A01_SQL_INJECTION_BYPASS_SUCCESS}"
@@ -120,7 +119,7 @@ def dashboard():
     return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag)
 
 
-# 📌 Challenges 2, 7 & 9: RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC
+# 📌 Challenges 2, 7 & 9: RACE CONDITION, CLIENT BYPASS & BUSINESS LOGIC LOOP
 @app.route('/quick-transfer', methods=['POST'])
 @login_required
 def quick_transfer():
@@ -128,7 +127,7 @@ def quick_transfer():
     target_acc = request.form.get('target_account', '').strip()
     is_vip_route = request.form.get('vip_bypass_token')
 
-    # Challenge 7: Client-Side Input Validation Bypass
+    # Challenge 7: Frontend Parameter Overwrite
     if amount == 1337733 and is_vip_route == "activated_override":
         flash("Validation Bypass Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
         return redirect(url_for('dashboard'))
@@ -137,17 +136,17 @@ def quick_transfer():
         flash('Cannot process invalid transaction amount!')
         return redirect(url_for('dashboard'))
     
-    # Challenge 9: Self-Transfer Business Logic Flaw
+    # Challenge 9: Internal Balance Destination Reflection Error
     if target_acc == current_user.account_number:
         current_user.balance += amount  
         db.session.commit()
         flash(f'Self-Transfer Hack Success! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
         return redirect(url_for('dashboard'))
 
-    # Challenge 2: Race Condition (Triggered when using multi-threaded Burp requests)
+    # Challenge 2: Asynchronous Race State Manipulation
     if current_user.balance >= amount:
         current_balance = current_user.balance
-        time.sleep(0.5)  # Latency window to allow asynchronous balance updates
+        time.sleep(0.5)  # Latency threshold to align concurrent threads
         current_user.balance = current_balance - amount
         db.session.commit()
         
@@ -160,20 +159,20 @@ def quick_transfer():
     return redirect(url_for('dashboard'))
 
 
-# 📌 Challenge 3: Insecure Design (Negative Values)
+# 📌 Challenge 3: Insecure Design Math (Integer Underflow via Negatives)
 @app.route('/open-fd', methods=['POST'])
 @login_required
 def open_fd():
     qty = int(request.form.get('qty', 1))
     if qty == -5:
-        current_user.balance -= (qty * 10000) # Math error: minus a negative adds balance
+        current_user.balance -= (qty * 10000) # Deduction converts to addition
         db.session.commit()
         flash('Insecure Design Exploit Success! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
         return redirect(url_for('dashboard'))
     return redirect(url_for('dashboard'))
 
 
-# 📌 Challenge 4: IDOR (Passbook Information Harvesting)
+# 📌 Challenge 4: IDOR (Passbook Statement Arbitrary Access)
 @app.route('/passbook/<int:user_id>')
 @login_required
 def passbook(user_id):
@@ -185,7 +184,7 @@ def passbook(user_id):
     return "Not Found", 404
 
 
-# 📌 Challenge 5: Secure Document Download IDOR
+# 📌 Challenge 5: IDOR (Confidential File Directory Direct Traversals)
 @app.route('/download/loan_<int:file_id>.pdf')
 @login_required
 def download_loan(file_id):
