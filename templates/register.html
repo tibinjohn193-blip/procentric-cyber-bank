@@ -8,13 +8,13 @@
     <div class="container mt-5" style="max-width: 450px;">
         <div class="card shadow border-0 mt-5">
             <div class="card-header bg-success text-white text-center py-3">
-                <h4>Create Savings Account</h4>
+                <h4>Create Savings Account Node</h4>
             </div>
             <div class="card-body p-4">
                 {% with messages = get_flashed_messages() %}
                   {% if messages %}
                     {% for message in messages %}
-                      <div class="alert alert-danger text-center">{{ message }}</div>
+                      <div class="alert alert-danger text-center shadow-sm">⚠️ {{ message }}</div>
                     {% endfor %}
                   {% endif %}
                 {% endwith %}
@@ -22,16 +22,16 @@
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Choose Username</label>
-                        <input type="text" name="username" class="form-control" required placeholder="Letters & numbers only">
+                        <input type="text" name="username" class="form-control" required placeholder="e.g., student123">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Choose Password</label>
-                        <input type="password" name="password" class="form-control" required placeholder="Minimum 4 characters">
+                        <input type="password" name="password" class="form-control" required placeholder="Enter secure password">
                     </div>
-                    <button type="submit" class="btn btn-success w-100 py-2">Register Online</button>
+                    <button type="submit" class="btn btn-success w-100 py-2 shadow-sm">Register Online</button>
                 </form>
                 <div class="text-center mt-3">
-                    <a href="/login" class="text-decoration-none">Back to Portal Login</a>
+                    <a href="/login" class="text-decoration-none text-primary">Already have an account? Login Portal</a>
                 </div>
             </div>
         </div>
