@@ -1,20 +1,20 @@
-# 1. Use the official lightweight Python 3.10 slim image
 FROM python:3.10-slim
 
-# 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copy the dependency file first to leverage Docker caching layers
-COPY requirements.txt requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Install the required Python libraries inside the container environment
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir Flask Flask-SQLAlchemy Flask-Login
 
-# 5. Copy the rest of the application files (app.py, templates, etc.) into the container
-COPY . .
+COPY . /app
 
-# 6. Expose port 5000 which our Flask application uses to bind local traffic
+RUN mkdir -p /app/instance && chmod -R 777 /app/instance
+
 EXPOSE 5000
 
-# 7. Provide the execution command to launch the Flask runtime environment
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+
 CMD ["python", "app.py"]
