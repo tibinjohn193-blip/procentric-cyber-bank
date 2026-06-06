@@ -15,6 +15,25 @@
     </nav>
 
     <div class="container mt-4">
+        
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card text-white bg-dark shadow-sm">
+                    <div class="card-body d-flex justify-content-between align-items-center py-2">
+                        <span>📡 Audit IP Node: <strong class="text-warning">{{ user.user_ip if user.user_ip else "Localhost" }}</strong></span>
+                        <span>🎯 Efficiency Score: <strong class="badge bg-{{ 'success' if score == 100 else 'danger' }} fs-6">{{ score }}% Efficiency Maximum</strong></span>
+                        <span>Hint Status: 
+                            {% if user.hint_viewed %}
+                            <strong class="text-danger">⚠️ View Hint Activated (-30% Deducted)</strong>
+                            {% else %}
+                            <strong class="text-success">✔️ Clean Node Run (No Hints Used)</strong>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if sql_flag %}
         <div class="alert alert-warning shadow">
             🚀 <b>SQL Injection Success!</b> Captured Authentication Key: <strong class="text-danger">{{ sql_flag }}</strong>
