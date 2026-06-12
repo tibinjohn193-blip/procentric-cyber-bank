@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Online Registration - Cyber Bank</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5" style="max-width: 450px;">
-        <div class="card shadow border-0 mt-5">
-            <div class="card-header bg-success text-white text-center py-3">
-                <h4>Create Savings Account Node</h4>
+<body class="bg-light" style="background: linear-gradient(135deg, #0f172a 0%, #0f2d37 100%); min-height: 100vh; display: flex; align-items: center;">
+    <div class="container" style="max-width: 450px;">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
+                <h4 class="fw-bold mb-0"><i class="bi bi-person-badge-fill me-2"></i>Open Savings Node</h4>
             </div>
             <div class="card-body p-4">
                 {% with messages = get_flashed_messages() %}
@@ -21,17 +24,17 @@
 
                 <form method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Choose Username</label>
-                        <input type="text" name="username" class="form-control" required placeholder="e.g., student123">
+                        <label class="form-label fw-semibold">Choose Unique Username</label>
+                        <input type="text" name="username" class="form-control" required placeholder="e.g., hacker99">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Choose Password</label>
-                        <input type="password" name="password" class="form-control" required placeholder="Enter secure password">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Choose Secure Password</label>
+                        <input type="password" name="password" class="form-control" required placeholder="Enter strong credentials">
                     </div>
-                    <button type="submit" class="btn btn-success w-100 py-2 shadow-sm">Register Online</button>
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow">Register Node Profile</button>
                 </form>
-                <div class="text-center mt-3">
-                    <a href="/login" class="text-decoration-none text-primary">Already have an account? Login Portal</a>
+                <div class="text-center mt-4">
+                    <a href="/login" class="text-decoration-none text-primary fw-semibold"><i class="bi bi-arrow-left"></i> Existing Portal User? Login Here</a>
                 </div>
             </div>
         </div>
