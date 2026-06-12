@@ -40,7 +40,7 @@ class User(UserMixin, db.Model):
     balance = db.Column(db.Integer, default=50000) 
     sql_injected_flag = db.Column(db.String(150), default="")
     user_ip = db.Column(db.String(50), default="")
-    solved_challenges = db.Column(db.String(300), default="[]") # Saved as JSON Array string
+    solved_challenges = db.Column(db.String(300), default="[]") 
 
     def get_solved_list(self):
         try:
@@ -75,7 +75,6 @@ with app.app_context():
 def home():
     return redirect(url_for('login'))
 
-# 📌 REGISTER ROUTE
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -98,7 +97,6 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# 📌 LOGIN ROUTE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -125,7 +123,6 @@ def login():
             
     return render_template('login.html')
 
-# 📌 DASHBOARD SCORE CALCULATOR
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -135,25 +132,21 @@ def dashboard():
         return render_template_string(injected_template)
         
     sql_flag = current_user.sql_injected_flag if current_user.sql_injected_flag else ""
-    
     solved_count = len(current_user.get_solved_list())
-    base_score = solved_count * 10  # 10 Points clean allocation per solved task
+    base_score = solved_count * 10  
 
     return render_template('scoreboard.html', user=current_user, sql_flag=sql_flag, score=base_score, solved_count=solved_count)
 
-# 📌 VIEW CHALLENGES ROUTE
 @app.route('/tasks')
 @login_required
 def tasks():
     return render_template('tasks.html', user=current_user, solved_list=current_user.get_solved_list())
 
-# 📌 FLAG VERIFICATION ENGINE
 @app.route('/submit-flag', methods=['POST'])
 @login_required
 def submit_flag():
     task_id = request.form.get('task_id')
     submitted_flag = request.form.get('flag', '').strip()
-    
     correct_flag = VERIFIED_FLAGS.get(task_id)
     
     if correct_flag and submitted_flag == correct_flag:
@@ -161,4 +154,94 @@ def submit_flag():
             db.session.commit()
             flash(f"success:Exploit Payload Verified for Challenge {task_id}! Points updated successfully.")
         else:
-            flash(f"success:Challenge {task_id}
+            flash(f"success:Challenge {task_id} has already been solved and verified.")
+    else:
+        flash(f"danger:Incorrect Flag structural signature submitted for Challenge {task_id}! Re-verify capture details.")
+        
+    return redirect(url_for('tasks'))
+
+@app.route('/quick-transfer', methods=['POST'])
+@login_required
+def quick_transfer():
+    amount = int(request.form.get('amount', 0))
+    target_acc = request.form.get('target_account', '').strip()
+    is_vip_route = request.form.get('vip_bypass_token')
+
+    if amount == 1337733 and is_vip_route == "activated_override":
+        flash("success:Validation Parameters Defeated! FLAG{A02_CLIENT_SIDE_VALIDATION_BYPASS}")
+        return redirect(url_for('dashboard'))
+
+    if amount <= 0:
+        flash('danger:System cannot process negative or null financial ledger parameters!')
+        return redirect(url_for('dashboard'))
+    
+    if target_acc == current_user.account_number:
+        current_user.balance += amount  
+        db.session.commit()
+        flash(f'success:Circular Business Loop Detected! FLAG{{A05_BUSINESS_LOGIC_SELF_TRANSFER}}')
+        return redirect(url_for('dashboard'))
+
+    if current_user.balance >= amount:
+        current_balance = current_user.balance
+        time.sleep(0.5)
+        current_user.balance = current_balance - amount
+        db.session.commit()
+        
+        if current_user.balance < 0:
+            flash('success:Thread Processing Synchronization Interrupted! FLAG{A04_CONCURRENCY_BALANCE_EXPLOIT}')
+        else:
+            flash(f'success:INR {amount} transferred successfully to targeted node footprint!')
+    else:
+        flash('danger:Transaction rejected! Insufficient account ledger balance available.')
+    return redirect(url_for('dashboard'))
+
+@app.route('/open-fd', methods=['POST'])
+@login_required
+def open_fd():
+    qty = int(request.form.get('qty', 1))
+    if qty == -5:
+        current_user.balance = current_user.balance - (qty * 10000)
+        db.session.commit()
+        flash('success:Insecure Architecture Matrix Overridden! FLAG{A05_INSECURE_DESIGN_NEGATIVE_VALUE}')
+    else:
+        flash('success:Standard Fixed Deposit Scheme block initialized successfully.')
+    return redirect(url_for('dashboard'))
+
+@app.route('/passbook/<int:user_id>')
+@login_required
+def passbook(user_id):
+    target_user = User.query.get(user_id)
+    if target_user:
+        if target_user.username == "admin":
+            return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook Profile: {target_user.username}</h2><p style='color:green; font-size:18px;'><b>FLAG{{A01_BROKEN_OBJECT_LEVEL_STATEMENT}}</b></p></div>"
+        return f"<div style='font-family:sans-serif; padding:20px;'><h2>E-Passbook Profile: {target_user.username}</h2><p>Account Number: {target_user.account_number}</p><p>Ledger Balance: {target_user.balance}</p></div>"
+    return "Node Data Reference Missing", 404
+
+@app.route('/download/loan_<int:file_id>.pdf')
+@login_required
+def download_loan(file_id):
+    if file_id == 999:
+        return "<div style='font-family:sans-serif; padding:20px;'><h3>⚠️ Restricted Document Infiltrated</h3><p style='color:red; font-size:18px;'>FLAG{A01_IDOR_SENSITIVE_FILE_DOWNLOAD}</p></div>"
+    return "<h3>Requested Static Asset Not Found On Server</h3>", 404
+
+# 📌 CHALLENGE 9: HIDDEN STAGING ENDPOINT FOR MISSING ACCESS CONTROL
+@app.route('/staging-v1')
+@login_required
+def staging_v1():
+    return f"""
+    <div style="font-family:sans-serif; padding:30px; background-color:#f8fafc; border-radius:10px; max-width:600px; margin:50px auto; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h2 style="color:#e11d48;">⚠️ Internal Staging Environment Active</h2>
+        <p style="color:#475569;"><b>Security Audit Notice:</b> This function level routing lacks structural role-based access validation controls.</p>
+        <hr style="border:1px solid #cbd5e1;">
+        <p style="font-size:18px; color:#16a34a;">🎉 <b>Infiltration Success! Captured Flag:</b> <code>FLAG{{A05_MISSING_ACCESS_CONTROL_ROUTING}}</code></p>
+    </div>
+    """
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
