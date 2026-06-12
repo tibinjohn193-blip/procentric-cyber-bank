@@ -2,112 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customer Dashboard - Cyber Bank</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <style>
-        .navbar-custom { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-        .metric-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .balance-display {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            color: white; border-radius: 12px; padding: 25px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-        }
-    </style>
+    <title>Customer Dashboard - Scoreboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-info" href="#"><i class="bi bi-building-fill me-2"></i> Procentric Secure Bank Node</a>
-            <a href="/tasks" target="_blank" class="btn btn-warning fw-bold shadow-sm px-3"><i class="bi bi-crosshair me-1"></i>🎯 View Lab Challenges (9 Tasks)</a>
-            <span class="navbar-text text-white ms-auto fw-semibold">Authenticated ID: <b class="text-warning">{{ user.username }}</b></span>
-            <a href="/logout" class="btn btn-danger btn-sm ms-3 px-3 rounded-pill"><i class="bi bi-power"></i> Logout</a>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-lg">
+        <span class="text-xl font-bold text-red-500">🛡️ PROCENTRIC CYBER BANK</span>
+        <div class="flex items-center space-x-4">
+            <a href="/tasks" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-4 py-2 rounded font-bold text-sm shadow">🎯 View Lab Tasks (9 Challenges)</a>
+            <span class="text-gray-300 text-sm">User: <code class="text-yellow-400 font-mono">{{ user.username }}</code></span>
+            <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-semibold">Logout</a>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card text-white bg-dark shadow border-0" style="border-radius: 12px;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                        <span><i class="bi bi-pc-display text-info me-1"></i> Target Node IP: <strong class="text-warning">Localhost Mapping</strong></span>
-                        <span><i class="bi bi-check-square-fill text-success me-1"></i> Completed Matrix: <strong class="badge bg-primary fs-6">{{ solved_count }} / 9 Tasks</strong></span>
-                        <span><i class="bi bi-award-fill text-warning me-1"></i> Total Score: <strong class="badge bg-success fs-6">{{ score }} Points Matrix</strong></span>
-                    </div>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-xs uppercase tracking-wider font-semibold">Total Score</p>
+                    <h3 class="text-3xl font-extrabold text-green-400 mt-1">{{ score }} Points</h3>
                 </div>
+                <span class="text-4xl">🏆</span>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-xs uppercase tracking-wider font-semibold">Tasks Solved</p>
+                    <h3 class="text-3xl font-extrabold text-blue-400 mt-1">{{ solved_count }} / 9</h3>
+                </div>
+                <span class="text-4xl">🧩</span>
             </div>
         </div>
 
         {% if sql_flag %}
-        <div class="alert alert-warning shadow border-0 d-flex align-items-center">
-            <i class="bi bi-rocket-takeoff-fill fs-4 me-2 text-danger"></i>
-            <div>🚀 <b>SQL Injection Authentication Bypass Achieved!</b> Captured Token Flag: <strong class="text-danger">{{ sql_flag }}</strong></div>
+        <div class="bg-yellow-950 border border-yellow-700 text-yellow-200 p-4 rounded-lg mb-8 shadow-md">
+            🚀 <b>SQL Injection Bypass Successful!</b> Flag: <code class="bg-gray-900 text-red-400 px-2 py-1 rounded font-bold">{{ sql_flag }}</code>
         </div>
         {% endif %}
 
         {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            {% for message in messages %}
-              {% if 'success:' in message %}
-                <div class="alert alert-success shadow border-0">🎉 {{ message.replace('success:','') }}</div>
-              {% else %}
-                <div class="alert alert-danger shadow border-0">⚠️ {{ message.replace('danger:','') }}</div>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-lg text-sm {% if 'success:' in message %} bg-green-950 border border-green-800 text-green-200 {% else %} bg-red-950 border border-red-800 text-red-200 {% endif %}">
+                            {{ message.replace('success:','').replace('danger:','') }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% endwith %}
 
-        <div class="row mt-3 g-4">
-            <div class="col-md-5">
-                <div class="balance-display mb-4">
-                    <small class="text-white-50 text-uppercase fw-bold">Available Book Balance</small>
-                    <h2 class="fw-bold my-2">INR {{ user.balance }}</h2>
-                    <hr class="opacity-20">
-                    <p class="small mb-1"><b>Account Handle:</b> {{ user.username }}</p>
-                    <p class="small mb-3"><b>Account Number:</b> {{ user.account_number }}</p>
-                    <div class="d-flex gap-2">
-                        <a href="/passbook/{{ user.id }}" target="_blank" class="btn btn-sm btn-light fw-bold text-primary px-3 shadow-sm"><i class="bi bi-receipt"></i> View Passbook</a>
-                        <a href="/download/loan_101.pdf" target="_blank" class="btn btn-sm btn-outline-light px-3"><i class="bi bi-file-earmark-pdf"></i> Loan Contract</a>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-8">
+                <div class="bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-700 p-6 rounded-xl shadow-lg">
+                    <p class="text-blue-300 text-xs uppercase tracking-wider font-bold">Available Book Balance</p>
+                    <h2 class="text-3xl font-extrabold text-white my-3">INR {{ user.balance }}</h2>
+                    <div class="space-y-2 text-xs font-mono pt-2 border-t border-blue-800">
+                        <p class="text-blue-200"><b>Account Name:</b> {{ user.username }}</p>
+                        <p class="text-blue-200"><b>Account ID:</b> {{ user.account_number }}</p>
+                    </div>
+                    <div class="mt-6 flex space-x-3">
+                        <a href="/passbook/{{ user.id }}" target="_blank" class="bg-white hover:bg-gray-100 text-blue-900 px-4 py-2 rounded font-bold text-xs shadow-md transition">&rarr; View Passbook</a>
+                        <a href="/download/loan_101.pdf" target="_blank" class="border border-white hover:bg-white hover:text-blue-900 text-white px-4 py-2 rounded font-bold text-xs transition">Loan Docs</a>
                     </div>
                 </div>
-                
-                <div class="card metric-card shadow-sm">
-                    <div class="card-header bg-secondary text-white fw-bold"><i class="bi bi-graph-up-arrow me-1"></i> Open Fixed Deposit (FD)</div>
-                    <div class="card-body">
-                        <form action="/open-fd" method="POST">
-                            <label class="form-label text-muted small fw-semibold">Number of FD Slots (Multiplier Quantity)</label>
-                            <input type="number" name="qty" class="form-control mb-3" value="1">
-                            <button type="submit" class="btn btn-secondary w-100 fw-bold shadow-sm">Activate FD Scheme</button>
-                        </form>
-                    </div>
+
+                <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-md">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Investment Schemes (Task 7)</h3>
+                    <form action="/open-fd" method="POST">
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Fixed Deposit Slots (Quantity)</label>
+                            <input type="number" name="qty" value="1" class="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded text-xs tracking-wider uppercase transition">Initialize FD Unit</button>
+                    </form>
                 </div>
             </div>
 
-            <div class="col-md-7">
-                <div class="card metric-card shadow-sm h-100">
-                    <div class="card-header bg-dark text-white fw-bold"><i class="bi bi-send-check-fill me-1"></i> Quick Institutional Fund Transfer</div>
-                    <div class="card-body p-4">
-                        <form action="/quick-transfer" method="POST">
-                            <div class="mb-3">
-                                <label class="form-label text-muted small fw-semibold">Target Beneficiary Account Number</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="bi bi-bank"></i></span>
-                                    <input type="text" name="target_account" class="form-control" placeholder="Enter Destination Account" required>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label text-muted small fw-semibold">Transfer Remittance Amount (INR)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">₹</span>
-                                    <input type="number" name="amount" class="form-control" placeholder="Enter Amount" required>
-                                </div>
-                            </div>
-                            <input type="hidden" name="vip_bypass_token" value="default_user_route">
-                            <button type="submit" class="btn btn-success w-100 py-2.5 fw-bold shadow"><i class="bi bi-shield-check me-1"></i> Authorize Express Transaction</button>
-                        </form>
-                    </div>
+            <div class="lg:col-span-7">
+                <div class="bg-gray-800 border border-gray-700 p-8 rounded-xl shadow-md h-full">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center"><span class="mr-2">💸</span> Quick Fund Transfer Portal (Task 4, 6, 8)</h3>
+                    <form action="/quick-transfer" method="POST" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Target Beneficiary Account Number</label>
+                            <input type="text" name="target_account" placeholder="Enter recipient account ID..." required class="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Remittance Amount (INR)</label>
+                            <input type="number" name="amount" placeholder="Enter transfer amount..." required class="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                        <input type="hidden" name="vip_bypass_token" value="standard_user_pipeline">
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-sm uppercase tracking-wide shadow-md transition">Authorize Transfer Transaction</button>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
 </body>
 </html>
