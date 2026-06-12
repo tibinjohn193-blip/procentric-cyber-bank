@@ -18,6 +18,7 @@ sudo apt install -y git docker.io
 Step 3: Fix AppArmor Policies and Start Docker Service
 -----------------------------------------------------
 Kali Linux/Parrot OS may restrict container initialization. Run these commands to unmask and start Docker cleanly:
+
 sudo systemctl unmask docker
 sudo systemctl start docker
 sudo systemctl enable docker
