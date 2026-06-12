@@ -2,92 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Retail NetBanking Login - Cyber Bank</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 50px rgba(99, 102, 241, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-        .card-header-gradient {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
-            color: white;
-            padding: 30px;
-        }
-        .bank-logo-icon {
-            font-size: 3.5rem;
-            color: #ffd700;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .btn-custom {
-            background: linear-gradient(135deg, #1e40af 0%, #0d9488 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-custom:hover {
-            background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.4);
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procentric Cyber Bank - Secure Portal Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container" style="max-width: 450px;">
-        <div class="card login-card">
-            <div class="card-header-gradient text-center">
-                <div class="mb-2"><i class="bi bi-shield-lock-fill bank-logo-icon"></i></div>
-                <h4 class="fw-bold mb-1">PROCENTRIC CYBER BANK</h4>
-                <p class="small text-white-50 mb-0">Secure Retail Internet Banking Infrastructure</p>
-            </div>
-            <div class="card-body p-4">
-                
-                {% with messages = get_flashed_messages() %}
-                  {% if messages %}
-                    {% for message in messages %}
-                      {% if 'success:' in message %}
-                        <div class="alert alert-success text-center shadow-sm d-flex align-items-center justify-content-center">
-                            <i class="bi bi-check-circle-fill me-2"></i> {{ message.replace('success:','') }}
-                        </div>
-                      {% else %}
-                        <div class="alert alert-danger text-center shadow-sm d-flex align-items-center justify-content-center">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message.replace('danger:','') }}
-                        </div>
-                      {% endif %}
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col justify-between">
 
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary"><i class="bi bi-person-fill me-1"></i> Customer User ID</label>
-                        <input type="text" name="username" class="form-control form-control-lg" placeholder="Enter Customer User ID" required>
-                    </div>
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl font-bold tracking-wider text-red-500">🛡️ PROCENTRIC CYBER BANK</span>
+        </div>
+        <div>
+            <span class="text-xs bg-red-900 text-red-200 px-2 py-1 rounded font-mono font-bold">⚠️ VULNERABILITY TRAINING SITE</span>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-xl max-w-md w-full">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-extrabold text-white">Customer Core Login</h2>
+                <p class="text-gray-400 text-xs mt-1">Authenticate credential blocks to access institutional ledger nodes.</p>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
                     <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary"><i class="bi bi-key-fill me-1"></i> Account Password</label>
-                        <input type="password" name="password" class="form-control form-control-lg" placeholder="Enter Password" required>
+                        {% for message in messages %}
+                            <div class="bg-red-950 border border-red-800 text-red-300 px-3 py-2 rounded text-xs font-medium">
+                                {{ message.replace('danger:', '').replace('success:', '') }}
+                            </div>
+                        {% endfor %}
                     </div>
-                    <button type="submit" class="btn btn-custom w-100 py-2.5 btn-lg shadow">Authorized Secure Login</button>
-                </form>
-                
-                <div class="text-center mt-4">
-                    <a href="/register" class="text-decoration-none text-success fw-semibold"><i class="bi bi-person-plus-fill me-1"></i> New Customer? Open Account Online</a>
+                {% endif %}
+            {% endwith %}
+
+            <form action="/login" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Customer User ID</label>
+                    <input type="text" name="username" placeholder="Enter Username ID..." required autocomplete="off"
+                           class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm font-mono text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition">
                 </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Account Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required
+                           class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm font-mono text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm tracking-wide uppercase shadow transition duration-200 mt-2">
+                    Access Infrastructure Account
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-gray-700 text-center text-xs">
+                <span class="text-gray-400">New customer node?</span>
+                <a href="/register" class="text-blue-400 hover:text-blue-300 ml-1 font-bold transition">Open Account Online &rarr;</a>
             </div>
         </div>
-    </div>
+    </main>
+
+    <footer class="bg-gray-800 border-t border-gray-700 py-3 text-center text-xxs text-gray-500 font-mono">
+        Educational Cyber Range Framework Node Context &copy; 2026 Local Host Sandbox
+    </footer>
+
 </body>
 </html>
