@@ -2,172 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Banking Range - Lab Challenges</title>
+    <title>Lab Assignment Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .solved-card {
-            border-left: 6px solid #10b981;
-            background-color: #f0fdf4;
-        }
-        .pending-card {
-            border-left: 6px solid #f59e0b;
-        }
-    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+<body class="bg-gray-900 text-gray-200 min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-lg">
-        <div class="flex items-center space-x-3">
-            <span class="text-2xl font-bold tracking-wider text-red-500">🛡️ PROCENTRIC CYBER BANK</span>
-            <span class="text-xs bg-gray-700 px-2 py-1 rounded text-gray-400 font-mono">v2.0-Stable</span>
-        </div>
-        <div class="flex items-center space-x-6">
-            <span class="text-gray-300 font-medium">Logged in as: <code class="text-yellow-400 font-mono">{{ user.username }}</code></span>
-            <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold text-sm transition shadow">📈 View Scoreboard Dashboard</a>
-            <a href="/logout" class="text-gray-400 hover:text-red-400 font-semibold text-sm transition">Sign Out</a>
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-md">
+        <span class="text-xl font-bold tracking-wider text-red-500">🛡️ CYBER BANK LABORATORY</span>
+        <div class="flex items-center space-x-4">
+            <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-bold">Return to Dashboard</a>
+            <a href="/logout" class="text-gray-400 hover:text-red-400 text-sm">Sign Out</a>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        <div class="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-md">
-            <h1 class="text-3xl font-extrabold text-white mb-2">🎯 Cyber Range Vulnerability Tasks</h1>
-            <p class="text-gray-400 text-sm">
-                Analyze target endpoints, manipulate parameter matrices, bypass client restrictions, or exploit structural race conditions to extract flags. Submit captured signatures in the inputs provided under each target card.
+    <main class="max-w-7xl mx-auto px-4 py-10">
+        <div class="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-sm">
+            <h1 class="text-2xl font-bold text-white">🎯 Active Assignment Challenges</h1>
+            <p class="text-xs text-yellow-400 mt-2 font-semibold">
+                ⚠️ Notice: Revealing hints decreases max potential challenge points by 30% (awards 7 points instead of 10).
             </p>
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     <div class="mt-4 space-y-2">
                         {% for message in messages %}
-                            {% if 'success:' in message %}
-                                <div class="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded relative font-medium text-sm">
-                                    {{ message.replace('success:', '') }}
-                                </div>
-                            {% elif 'danger:' in message %}
-                                <div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded relative font-medium text-sm">
-                                    {{ message.replace('danger:', '') }}
-                                </div>
-                            {% endif %}
+                            <div class="p-3 rounded text-xs {% if 'success:' in message %} bg-green-950 text-green-300 {% else %} bg-red-950 text-red-300 {% endif %}">
+                                {{ message.replace('success:', '').replace('danger:', '') }}
+                            </div>
                         {% endfor %}
                     </div>
                 {% endif %}
             {% endwith %}
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% set challenges = [
-                {
-                    "id": "1",
-                    "title": "Challenge 1: Authentication Bypass (SQL Injection)",
-                    "desc": "The primary authentication login controller is vulnerable to basic structural logic manipulation. Force administrative login access bounds without knowing credentials.",
-                    "hint": "Try appending classic tautology payloads into the username login input parameters (e.g., ' OR 1=1-- )."
-                },
-                {
-                    "id": "2",
-                    "title": "Challenge 2: Broken Object Level Authorization (BOLA)",
-                    "desc": "The passbook verification routine accepts incremental integer index parameters. Attempt horizontal privilege escalation to look into the restricted admin ledger data profile.",
-                    "hint": "Analyze the URL schema pattern when accessing your passbook. Modify the routing ID parameters dynamically until you point directly to the admin profile."
-                },
-                {
-                    "id": "3",
-                    "title": "Challenge 3: Insecure Direct Object Reference (IDOR)",
-                    "desc": "Download parameters are processed directly through predictable file identification markers. Hunt for restricted transaction loan audit logs hidden from normal users.",
-                    "hint": "Fuzz or sequentially query static PDF asset reference ranges (e.g., download paths containing loan_999.pdf) to find administrative records."
-                },
-                {
-                    "id": "4",
-                    "title": "Challenge 4: Client-Side Parameter Validation Tampering",
-                    "desc": "The fast fund-transfer page claims that a specialized 'VIP Bypass Mode' requires a restricted processing key. Defeat client restrictions to bypass local input validations.",
-                    "hint": "Inspect the source elements or use intercepting proxies (like Burp Suite) to locate hidden form inputs or modify locked validation data payloads before transmission."
-                },
-                {
-                    "id": "5",
-                    "title": "Challenge 5: Server-Side Template Injection (SSTI)",
-                    "desc": "The greeting subsystem directly loads user inputs straight inside active template rendering wrappers without filtering. Trick the backend expression engine into running logic commands.",
-                    "hint": "Register a fresh account containing evaluation expression markers (e.g., double curly brackets like {{ 7*7 }}), then log in to view server evaluations."
-                },
-                {
-                    "id": "6",
-                    "title": "Challenge 6: Concurrency Race Condition Exploit",
-                    "desc": "High-volume structural operations on standard fund-transfer forms exhibit dangerous transaction lag. Force the target account system's balances into negative figures.",
-                    "hint": "Fire multiple concurrent transfer requests simultaneously using rapid burst utility engines (e.g., Burp Suite Turbo Intruder) before database tracking updates take place."
-                },
-                {
-                    "id": "7",
-                    "title": "Challenge 7: Business Logic Flow - Negative Value Submission",
-                    "desc": "The Fixed Deposit allocation layer verifies numbers poorly. Trick the server into adding capital directly back inside your primary balance.",
-                    "hint": "Input negative quantities inside the application layout form. If multiplication lacks lower validation limits, subtracting negative debt results in a balance addition."
-                },
-                {
-                    "id": "8",
-                    "title": "Challenge 8: Business Logic Flow - Arbitrary Circular Transfer",
-                    "desc": "Financial verification logic assumes ledger routes can only map between separate user states. Attempt to execute self-referential circular funding commands.",
-                    "hint": "Initiate a direct transfer loop where the target destination matches your own account identifier footprint to trick the ledger calculation fields."
-                },
-                {
-                    "id": "9",
-                    "title": "Challenge 9: Missing Function Level Access Control Matrix",
-                    "desc": "Staging server resources and administrative management directories often remain active under predictable names. Discover hidden endpoints without explicit authorization filters.",
-                    "hint": "The flag is no longer exposed here! Developers frequently run parallel endpoints on predictable naming patterns. Try fuzzing or navigating directly to '/staging-v1' while logged in."
-                }
+                {"id": "1", "title": "Task 1: SQL Injection Bypass", "hint": "Inject tautology statements inside username entry boxes, such as ' OR 1=1--"},
+                {"id": "2", "title": "Task 2: Broken Object Authorization", "hint": "Alter routing path IDs on the statement passbook view window directly to target 1."},
+                {"id": "3", "title": "Task 3: Insecure Object References", "hint": "Fuzz downloading pointers manually, look for hidden assets like loan_999.pdf."},
+                {"id": "4", "title": "Task 4: Parameter Validation Tampering", "hint": "Alter intercepted request parameters, switch vip_bypass_token values to activated_override."},
+                {"id": "5", "title": "Task 5: Server-Side Template Injection", "hint": "Create usernames embedded with execution templates like {{7*7}}."},
+                {"id": "6", "title": "Task 6: Concurrency Race Condition", "hint": "Fire multiple rapid automated balance transfer streams simultaneously to loop transactions."},
+                {"id": "7", "title": "Task 7: Business Logic - Negative Inputs", "hint": "Input negative values inside fixed deposit unit multipliers (Exactly try -5)."},
+                {"id": "8", "title": "Task 8: Business Logic - Self Loop", "hint": "Try triggering ledger balance processing loops by routing money to your own wallet routing ID."},
+                {"id": "9", "title": "Task 9: Function Level Access Controls", "hint": "Locate administrative development endpoints manually, browse directly to /staging-v1."}
             ] %}
 
             {% for ch in challenges %}
                 {% set is_solved = ch.id in solved_list %}
-                <div class="rounded-lg shadow-md transition transform hover:-translate-y-1 p-6 flex flex-col justify-between border border-gray-700 bg-gray-800 {{ 'solved-card' if is_solved else 'pending-card' }}">
+                {% set hint_unlocked = ch.id in hints_list %}
+                
+                <div class="p-5 rounded-lg border border-gray-700 bg-gray-800 flex flex-col justify-between shadow-sm">
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs uppercase px-2 py-1 rounded font-mono font-bold tracking-wider {{ 'bg-green-900 text-green-300' if is_solved else 'bg-yellow-900 text-yellow-300' }}">
-                                {{ '✔️ COMPLETED' if is_solved else '⚡ PENDING EXPLOIT' }}
+                            <span class="text-xs uppercase px-2 py-0.5 rounded font-mono font-bold {% if is_solved %} bg-green-900 text-green-300 {% else %} bg-yellow-950 text-yellow-400 {% endif %}">
+                                {% if is_solved %} ✔️ CLEARED {% if hint_unlocked %} (7 pts) {% else %} (10 pts) {% endif %} {% else %} ⚡ OPEN {% endif %}
                             </span>
-                            <span class="text-xs text-gray-500 font-mono font-bold">TASK ID: #0{{ ch.id }}</span>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-100 mb-2">{{ ch.title }}</h3>
-                        <p class="text-gray-400 text-xs leading-relaxed mb-4">{{ ch.desc }}</p>
+                        <h3 class="text-sm font-bold text-gray-100 mb-4">{{ ch.title }}</h3>
                     </div>
 
                     <div>
-                        <div class="mb-4">
-                            <button onclick="toggleHint('hint-{{ ch.id }}')" class="text-xs text-blue-400 hover:text-blue-300 focus:outline-none font-medium flex items-center space-x-1">
-                                <span>💡 Toggle Strategic Hint Information</span>
-                            </button>
-                            <div id="hint-{{ ch.id }}" class="hidden mt-2 p-3 bg-gray-900 border border-gray-700 rounded text-xs text-yellow-400 font-mono leading-relaxed shadow-inner">
-                                {{ ch.hint }}
-                            </div>
+                        <div class="mb-4 pt-3 border-t border-gray-700">
+                            {% if hint_unlocked %}
+                                <div class="p-2.5 bg-gray-900 text-yellow-400 rounded text-xs font-mono border border-gray-700">
+                                    💡 <b>Hint Data:</b> {{ ch.hint }}
+                               </div>
+                            {% else %}
+                                <form action="/unlock-hint" method="POST">
+                                    <input type="hidden" name="task_id" value="{{ ch.id }}">
+                                    <button type="submit" onclick="return confirm('Unlock this hint? A 30% point deduction will apply.')" class="text-xs text-blue-400 hover:underline font-semibold">
+                                        🔓 Reveal Hint (-30% Score Penalty)
+                                    </button>
+                                </form>
+                            {% endif %}
                         </div>
 
-                        <form action="/submit-flag" method="POST" class="mt-2 pt-4 border-t border-gray-700">
+                        <form action="/submit-flag" method="POST">
                             <input type="hidden" name="task_id" value="{{ ch.id }}">
-                            <div class="flex space-x-2">
-                                <input type="text" name="flag" placeholder="FLAG{...}" required 
-                                       class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
-                                       {% if is_solved %} disabled value="VERIFIED EXPLOIT COMPLETED" {% endif %}>
-                                <button type="submit" 
-                                        class="px-4 py-2 text-xs font-bold rounded tracking-wide transition uppercase shadow {{ 'bg-gray-600 text-gray-400 cursor-not-allowed' if is_solved else 'bg-red-600 hover:bg-red-700 text-white' }}"
-                                        {% if is_solved %} disabled {% endif %}>
-                                    Submit
-                                </button>
+                            <div class="flex space-x-1.5">
+                                <input type="text" name="flag" placeholder="FLAG{...}" required class="w-full bg-gray-900 border border-gray-600 rounded px-2.5 py-1 text-xs text-white" {% if is_solved %} disabled value="VERIFIED SYSTEM" {% endif %}>
+                                <button type="submit" class="bg-red-600 px-3 py-1 text-xs font-bold rounded hover:bg-red-700" {% if is_solved %} disabled {% endif %}>Submit</button>
                             </div>
                         </form>
                     </div>
                 </div>
             {% endfor %}
-
         </div>
     </main>
 
-    <script>
-        function toggleHint(elementId) {
-            const hintBox = document.getElementById(elementId);
-            if (hintBox.classList.contains('hidden')) {
-                hintBox.classList.remove('hidden');
-            } else {
-                hintBox.classList.add('hidden');
-            }
-        }
-    </script>
 </body>
 </html>
