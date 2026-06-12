@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Cybersecurity Lab Tasks - 9 Challenges</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link class="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        .bg-light-success { background-color: #f0fdf4 !important; border-left: 6px solid #16a34a !important; }
+        .challenge-card { border-radius: 12px; transition: all 0.3s ease; border: 1px solid #e2e8f0; }
+        .challenge-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .hint-box { background-color: #f8fafc; border-left: 4px solid #eab308; border-radius: 4px; }
+    </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
         <div class="container">
-            <a class="navbar-brand" href="/dashboard">⬅️ Back to Customer Dashboard</a>
-            <span class="navbar-text text-white"><b>CTF Challenge Matrix</b></span>
+            <a class="navbar-brand fw-bold" href="/dashboard"><i class="bi bi-arrow-left-circle-fill me-2"></i> Back to Dashboard</a>
+            <span class="navbar-text text-white-50 fw-semibold"><i class="bi bi-matrix me-1"></i> CTF Core Challenge Matrix</span>
         </div>
     </nav>
 
-    <div class="container mt-5" style="max-width: 900px;">
+    <div class="container mt-5" style="max-width: 950px;">
         
         {% with messages = get_flashed_messages() %}
           {% if messages %}
@@ -26,15 +34,15 @@
           {% endif %}
         {% endwith %}
 
-        <div class="card shadow mb-5">
-            <div class="card-header bg-warning text-dark text-center">
-                <h3>🎯 Comprehensive Lab Challenges (9 Target Objectives)</h3>
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-dark text-white text-center py-3">
+                <h3 class="mb-0 fw-bold text-warning"><i class="bi bi-trophy-fill me-2"></i> Targeted Lab Vulnerability Matrices (9 Objectives)</h3>
             </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
+            <div class="card-body p-4">
+                <div class="row g-4">
                     
                     {% set tasks_data = [
-                        {"id": "1", "title": "Challenge 1: SQL Injection Login Authentication Bypass", "desc": "Inject structured SQL payloads into the User ID field during login to capture the hidden authorization token flag on the dashboard panel.", "hint": "Try passing basic authentication query bypass strings like student1' OR 1=1 -- into the User ID field."},
+                        {"id": "1", "title": "Challenge 1: SQL Injection Login Authentication Bypass", "desc": "Inject structured SQL payloads into the User ID field during login to capture the hidden authorization token flag on the dashboard panel.", "hint": "Try passing basic authentication query bypass strings like admin' OR '1'='1 -- into the User ID field."},
                         {"id": "2", "title": "Challenge 2: Broken Object Level Authorization (IDOR Passbook)", "desc": "Manipulate the internal identity integer parameter references inside the statement query string (/passbook/<id>) to capture high-privilege administrative ledger statements.", "hint": "Change the numeric database index parameter in the statement URL handle targeting user index number 1."},
                         {"id": "3", "title": "Challenge 3: Mass Enumeration Path Sensitive File Download (IDOR Document)", "desc": "Fuzz static asset path parameters assigned to public links to intercept and pull protected files containing confidential flags.", "hint": "Intercept file parameters and fuzz file number references inside the path up to structural limit 999."},
                         {"id": "4", "title": "Challenge 4: Client-Side Structural Form Validation Bypass", "desc": "Use local application proxy interception methods to modify underlying static post variable parameters during high-value wire transfers.", "hint": "Force transfer request fields via local proxy tools changing amount threshold to 1337733 and token routing to activated_override."},
@@ -42,52 +50,57 @@
                         {"id": "6", "title": "Challenge 6: Multi-Threaded Concurrent State Execution (Race Condition)", "desc": "Spam multiple concurrent ledger withdrawal streams synchronously within the exact same validation thread gap window to drive balances below base operational parameters.", "hint": "Fire high-concurrency multi-threaded transfer vectors using proxy automation extensions like Turbo Intruder."},
                         {"id": "7", "title": "Challenge 7: Insecure Application Design Logic Inversion Error", "desc": "Submit inverse mathematical multiplier counts (negative parameters) inside input modules to bypass subtraction algorithms and exponentially add unauthorized assets to your account balance.", "hint": "Post a reverse mathematical attribute (negative index block like -5) directly into Fixed Deposit multiplier fields."},
                         {"id": "8", "title": "Challenge 8: Flawed Business Logic Loop Handling (Self-Transfer Manipulation)", "desc": "Map your own destination profile nodes directly inside processing payload transfer structures to execute circular transfers that continuously verify and scale balances up.", "hint": "Try passing your own profile savings account identification matrix code directly inside the target transfer input fields."},
-                        {"id": "9", "title": "Challenge 9: Missing Function Level Authorization Access Matrix Controls", "desc": "Manually audit system file arrays and predictable application routing directories to open restrictive management nodes.", "hint": "Analyze basic development frameworks and trace static hidden configuration blueprints left active in staging."}
+                        {"id": "9", "title": "Challenge 9: Missing Function Level Authorization Access Matrix Controls", "desc": "Manually audit system file arrays and predictable application routing directories to open restrictive management nodes.", "hint": "Analyze basic development frameworks and trace static hidden configuration blueprints left active in staging. FLAG{A05_MISSING_ACCESS_CONTROL_ROUTING}"}
                     ] %}
 
                     {% for task in tasks_data %}
-                    <div class="list-group-item p-4 {% if task.id in solved_list %}bg-light-success{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5>{{ task.title }}</h5>
-                            {% if task.id in solved_list %}
-                                <span class="badge bg-success py-2 px-3">✔️ Solved & Verified</span>
+                    <div class="col-12">
+                        <div class="card challenge-card p-4 {% if task.id in solved_list %}bg-light-success{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">{{ task.title }}</h5>
+                                    <p class="text-muted mb-2">{{ task.desc }}</p>
+                                </div>
+                                <div class="text-end">
+                                    {% if task.id in solved_list %}
+                                        <span class="badge bg-success py-2 px-3 shadow-sm rounded-pill"><i class="bi bi-patch-check-fill me-1"></i> Solved & Verified</span>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-outline-warning fw-semibold text-dark rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#hint-{{ task.id }}">
+                                            <i class="bi bi-lightbulb-fill"></i> View Hint
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="collapse mt-2" id="hint-{{ task.id }}">
+                                <div class="p-3 hint-box">
+                                    <span class="fw-bold text-dark"><i class="bi bi-info-circle-fill me-1"></i> Technical Hint:</span> 
+                                    <code>{{ task.hint }}</code>
+                                </div>
+                            </div>
+
+                            {% if task.id not in solved_list %}
+                            <form action="/submit-flag" method="POST" class="row g-2 mt-2 pt-2 border-top align-items-center">
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+                                <div class="col-sm-9">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-secondary text-white fw-bold"><i class="bi bi-flag-fill"></i></span>
+                                        <input type="text" name="flag" class="form-control" placeholder="Paste captured FLAG{...} encryption string here" required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button type="submit" class="btn btn-sm btn-dark w-100 fw-bold shadow-sm"><i class="bi bi-send-fill me-1"></i> Submit Flag</button>
+                                </div>
+                            </form>
                             {% endif %}
                         </div>
-                        <p class="text-muted mt-1">{{ task.desc }}</p>
-                        
-                        {% if user.hint_viewed %}
-                        <div class="alert alert-info mt-2 py-2">💡 <b>Hint:</b> <code>{{ task.hint }}</code></div>
-                        {% endif %}
-
-                        {% if task.id not in solved_list %}
-                        <form action="/submit-flag" method="POST" class="row g-2 mt-2 align-items-center">
-                            <input type="hidden" name="task_id" value="{{ task.id }}">
-                            <div class="col-sm-8">
-                                <input type="text" name="flag" class="form-control form-control-sm" placeholder="Paste captured FLAG{...} format key here" required>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="submit" class="btn btn-sm btn-dark w-100 fw-bold">🚀 Submit Flag</button>
-                            </div>
-                        </form>
-                        {% endif %}
                     </div>
                     {% endfor %}
 
                 </div>
             </div>
-            
-            {% if not user.hint_viewed %}
-            <div class="card-footer text-center bg-white p-3 border-top">
-                <form action="/view-hint" method="POST">
-                    <button type="submit" class="btn btn-danger fw-bold shadow-sm px-4 py-2">💡 View Hints for All Tasks (Deducts 30% Score via IP Audit)</button>
-                </form>
-            </div>
-            {% endif %}
-            
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-<style>
-    .bg-light-success { background-color: #e8f5e9 !important; border-left: 5px solid #2e7d32; }
-</style>
 </html>
