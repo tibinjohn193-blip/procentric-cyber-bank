@@ -37,11 +37,13 @@ cd procentric-cyber-bank
 Step 6: Build the Future-Proof Docker Image
 -------------------------------------------
 Compile the lab environment (Do not forget the period "." at the end):
+
 sudo docker build -t procentric-cyber-bank .
 
 Step 7: Run the Cyber Bank Range Container
 -----------------------------------------
 Launch the container with continuous auto-restart safety parameters:
+
 sudo docker run -d -p 5000:5000 --name cyber-bank-range --restart unless-stopped procentric-cyber-bank
 
 --------------------------------------------------------------------
