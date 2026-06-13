@@ -53,5 +53,3 @@ HOW TO ACCESS AND SOLVE THE LAB
 2. Click "Open Account Online" to register your student profile, then log in.
 3. Click on the "View Lab Challenges" button to see the 9 cybersecurity tasks.
 
-💡 Special Hint for Challenge 9: 
-The flag is hidden! To capture flag 9, you must guess predictable developer endpoints (such as staging routing targets) directly inside your web browser's URL address bar while authenticated.
